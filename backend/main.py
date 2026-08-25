@@ -1,6 +1,8 @@
 import os
 import re
 import uuid
+import json
+import sqlite3
 from datetime import datetime, timezone
 
 from fastapi import FastAPI, HTTPException, Depends
@@ -10,10 +12,13 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 
 import validator
+import db
 from auth import verify_admin, validate_token
 from rag import generate_ai_analysis
 
 load_dotenv()
+
+db.init_db()
 
 errors = validator.validate()
 
@@ -30,11 +35,7 @@ SOURCE_BY_ID = {
     for source in SOURCES
 }
 
-ACCESS_REQUESTS = {}
-NOTIFICATIONS = []
-AUDIT_LOGS = []
-
-CASE_LAW = [
+CASE_LAW_SEED = [
     {
         "id": "placeholder_vices_caches",
         "court": "À compléter depuis source officielle",
@@ -108,7 +109,7 @@ CASE_LAW = [
     }
 ]
 
-app = FastAPI(title="Justice Auto API robuste")
+app = FastAPI(title="Justice Auto API robuste SQLite")
 
 allowed_origins = [
     origin.strip()
@@ -148,6 +149,23 @@ class AccessReviewIn(BaseModel):
     reason: str | None = None
 
 
+class CaseLawIn(BaseModel):
+    id: str | None = None
+    court: str | None = None
+    decision_date: str | None = None
+    reference: str | None = None
+    themes: list[str] = []
+    actors: list[str] = []
+    summary: str
+    url: str | None = None
+    source_id: str | None = None
+    verified: bool = False
+
+
+def now_iso():
+    return datetime.now(timezone.utc).isoformat()
+
+
 def require_auth(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials if credentials else None
     user = validate_token(token)
@@ -159,13 +177,87 @@ def require_auth(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 
 def audit_log(actor: str, action: str, target: str, metadata: dict | None = None):
-    AUDIT_LOGS.append({
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "actor": actor,
-        "action": action,
-        "target": target,
-        "metadata": metadata or {}
-    })
+    connection = db.get_connection()
+
+    try:
+        connection.execute(
+            """
+            INSERT INTO audit_logs (
+                timestamp,
+                actor,
+                action,
+                target,
+                metadata
+            )
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                now_iso(),
+                actor,
+                action,
+                target,
+                json.dumps(metadata or {}, ensure_ascii=False)
+            )
+        )
+
+        connection.commit()
+
+    finally:
+        connection.close()
+
+
+def ensure_case_law_seed():
+    connection = db.get_connection()
+
+    try:
+        row = connection.execute(
+            """
+            SELECT COUNT(*) AS count
+            FROM case_law
+            """
+        ).fetchone()
+
+        count = row["count"] if row else 0
+
+        if count == 0:
+            for decision in CASE_LAW_SEED:
+                connection.execute(
+                    """
+                    INSERT INTO case_law (
+                        id,
+                        court,
+                        decision_date,
+                        reference,
+                        themes,
+                        actors,
+                        summary,
+                        url,
+                        source_id,
+                        verified
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        decision["id"],
+                        decision["court"],
+                        decision["decision_date"],
+                        decision["reference"],
+                        json.dumps(decision["themes"], ensure_ascii=False),
+                        json.dumps(decision["actors"], ensure_ascii=False),
+                        decision["summary"],
+                        decision["url"],
+                        decision["source_id"],
+                        1 if decision["verified"] else 0
+                    )
+                )
+
+            connection.commit()
+
+    finally:
+        connection.close()
+
+
+ensure_case_law_seed()
 
 
 def normalize(text: str) -> str:
@@ -290,11 +382,47 @@ def guardrail(hypotheses: list):
             )
 
 
+def get_case_law_from_db():
+    connection = db.get_connection()
+
+    try:
+        rows = connection.execute(
+            """
+            SELECT *
+            FROM case_law
+            """
+        ).fetchall()
+
+        result = []
+
+        for row in rows:
+            item = dict(row)
+
+            try:
+                item["themes"] = json.loads(item.get("themes") or "[]")
+            except Exception:
+                item["themes"] = []
+
+            try:
+                item["actors"] = json.loads(item.get("actors") or "[]")
+            except Exception:
+                item["actors"] = []
+
+            item["verified"] = bool(item.get("verified"))
+
+            result.append(item)
+
+        return result
+
+    finally:
+        connection.close()
+
+
 @app.get("/")
 def root():
     return {
         "status": "ok",
-        "message": "API Justice Auto robuste",
+        "message": "API Justice Auto robuste SQLite",
         "warning": "Information juridique automatisée, ne remplace pas un avocat."
     }
 
@@ -303,7 +431,7 @@ def root():
 def health():
     return {
         "status": "ok",
-        "timestamp": datetime.now(timezone.utc).isoformat()
+        "timestamp": now_iso()
     }
 
 
@@ -418,18 +546,43 @@ def ai_analyze(payload: AnalyzeRequest, user=Depends(require_auth)):
 @app.post("/api/access/request")
 def request_access(payload: AccessRequestIn):
     request_id = str(uuid.uuid4())
+    created_at = now_iso()
 
-    ACCESS_REQUESTS[request_id] = {
-        "id": request_id,
-        "device_id": payload.device_id,
-        "contact": payload.contact,
-        "message": payload.message,
-        "status": "pending",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "reviewed_at": None,
-        "reviewed_by": None,
-        "decision_reason": None
-    }
+    connection = db.get_connection()
+
+    try:
+        connection.execute(
+            """
+            INSERT INTO access_requests (
+                id,
+                device_id,
+                contact,
+                message,
+                status,
+                created_at,
+                reviewed_at,
+                reviewed_by,
+                decision_reason
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                request_id,
+                payload.device_id,
+                payload.contact,
+                payload.message,
+                "pending",
+                created_at,
+                None,
+                None,
+                None
+            )
+        )
+
+        connection.commit()
+
+    finally:
+        connection.close()
 
     audit_log(
         actor="anonymous",
@@ -450,21 +603,45 @@ def request_access(payload: AccessRequestIn):
 
 @app.get("/api/access/status/{request_id}")
 def access_status(request_id: str):
-    request = ACCESS_REQUESTS.get(request_id)
+    connection = db.get_connection()
 
-    if not request:
+    try:
+        row = connection.execute(
+            """
+            SELECT *
+            FROM access_requests
+            WHERE id = ?
+            """,
+            (request_id,)
+        ).fetchone()
+
+    finally:
+        connection.close()
+
+    if not row:
         raise HTTPException(status_code=404, detail="Demande introuvable")
 
-    return request
+    return dict(row)
 
 
 @app.get("/api/admin/access-requests")
 def list_access_requests(user=Depends(require_auth)):
-    requests = list(ACCESS_REQUESTS.values())
-    requests.sort(key=lambda item: item.get("created_at", ""), reverse=True)
+    connection = db.get_connection()
+
+    try:
+        rows = connection.execute(
+            """
+            SELECT *
+            FROM access_requests
+            ORDER BY created_at DESC
+            """
+        ).fetchall()
+
+    finally:
+        connection.close()
 
     return {
-        "requests": requests
+        "requests": [dict(row) for row in rows]
     }
 
 
@@ -474,34 +651,82 @@ def review_access_request(
     payload: AccessReviewIn,
     user=Depends(require_auth)
 ):
-    if request_id not in ACCESS_REQUESTS:
-        raise HTTPException(status_code=404, detail="Demande introuvable")
-
     if payload.decision not in ["approved", "refused"]:
         raise HTTPException(
             status_code=400,
             detail="La décision doit être 'approved' ou 'refused'."
         )
 
-    ACCESS_REQUESTS[request_id]["status"] = payload.decision
-    ACCESS_REQUESTS[request_id]["reviewed_at"] = datetime.now(timezone.utc).isoformat()
-    ACCESS_REQUESTS[request_id]["reviewed_by"] = user.get("username")
-    ACCESS_REQUESTS[request_id]["decision_reason"] = payload.reason
+    reviewed_at = now_iso()
+    reviewed_by = user.get("username")
 
+    notification_id = str(uuid.uuid4())
     notification_title = "Accès autorisé" if payload.decision == "approved" else "Accès refusé"
     notification_body = "Votre demande d'accès a été acceptée." if payload.decision == "approved" else "Votre demande d'accès a été refusée."
 
-    NOTIFICATIONS.append({
-        "id": str(uuid.uuid4()),
-        "target_request_id": request_id,
-        "title": notification_title,
-        "body": notification_body,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "sent": False
-    })
+    connection = db.get_connection()
+
+    try:
+        cursor = connection.execute(
+            """
+            UPDATE access_requests
+            SET
+                status = ?,
+                reviewed_at = ?,
+                reviewed_by = ?,
+                decision_reason = ?
+            WHERE id = ?
+            """,
+            (
+                payload.decision,
+                reviewed_at,
+                reviewed_by,
+                payload.reason,
+                request_id
+            )
+        )
+
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Demande introuvable")
+
+        connection.execute(
+            """
+            INSERT INTO notifications (
+                id,
+                target_request_id,
+                title,
+                body,
+                created_at,
+                sent
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                notification_id,
+                request_id,
+                notification_title,
+                notification_body,
+                now_iso(),
+                0
+            )
+        )
+
+        connection.commit()
+
+        row = connection.execute(
+            """
+            SELECT *
+            FROM access_requests
+            WHERE id = ?
+            """,
+            (request_id,)
+        ).fetchone()
+
+    finally:
+        connection.close()
 
     audit_log(
-        actor=user.get("username"),
+        actor=reviewed_by,
         action="access_review",
         target=request_id,
         metadata={
@@ -510,20 +735,136 @@ def review_access_request(
         }
     )
 
-    return ACCESS_REQUESTS[request_id]
+    return dict(row)
 
 
 @app.get("/api/admin/notifications")
 def list_notifications(user=Depends(require_auth)):
+    connection = db.get_connection()
+
+    try:
+        rows = connection.execute(
+            """
+            SELECT *
+            FROM notifications
+            ORDER BY created_at DESC
+            """
+        ).fetchall()
+
+    finally:
+        connection.close()
+
     return {
-        "notifications": NOTIFICATIONS
+        "notifications": [dict(row) for row in rows]
     }
 
 
 @app.get("/api/admin/audit-logs")
 def list_audit_logs(user=Depends(require_auth)):
+    connection = db.get_connection()
+
+    try:
+        rows = connection.execute(
+            """
+            SELECT *
+            FROM audit_logs
+            ORDER BY id DESC
+            LIMIT 500
+            """
+        ).fetchall()
+
+    finally:
+        connection.close()
+
+    logs = []
+
+    for row in rows:
+        item = dict(row)
+
+        try:
+            item["metadata"] = json.loads(item.get("metadata") or "{}")
+        except Exception:
+            item["metadata"] = {}
+
+        logs.append(item)
+
     return {
-        "logs": AUDIT_LOGS
+        "logs": logs
+    }
+
+
+@app.post("/api/admin/case-law")
+def add_case_law(payload: CaseLawIn, user=Depends(require_auth)):
+    decision_id = payload.id or str(uuid.uuid4())
+
+    if payload.source_id and payload.source_id not in SOURCE_BY_ID:
+        raise HTTPException(
+            status_code=400,
+            detail="source_id inconnu. Utilisez une source définie dans sources.json."
+        )
+
+    connection = db.get_connection()
+
+    try:
+        connection.execute(
+            """
+            INSERT INTO case_law (
+                id,
+                court,
+                decision_date,
+                reference,
+                themes,
+                actors,
+                summary,
+                url,
+                source_id,
+                verified
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                court = excluded.court,
+                decision_date = excluded.decision_date,
+                reference = excluded.reference,
+                themes = excluded.themes,
+                actors = excluded.actors,
+                summary = excluded.summary,
+                url = excluded.url,
+                source_id = excluded.source_id,
+                verified = excluded.verified
+            """,
+            (
+                decision_id,
+                payload.court,
+                payload.decision_date,
+                payload.reference,
+                json.dumps(payload.themes, ensure_ascii=False),
+                json.dumps(payload.actors, ensure_ascii=False),
+                payload.summary,
+                payload.url,
+                payload.source_id,
+                1 if payload.verified else 0
+            )
+        )
+
+        connection.commit()
+
+    finally:
+        connection.close()
+
+    audit_log(
+        actor=user.get("username"),
+        action="case_law_saved",
+        target=decision_id,
+        metadata={
+            "court": payload.court,
+            "reference": payload.reference,
+            "source_id": payload.source_id
+        }
+    )
+
+    return {
+        "id": decision_id,
+        "status": "saved"
     }
 
 
@@ -534,10 +875,11 @@ def search_case_law(
     theme: str = "",
     user=Depends(require_auth)
 ):
+    decisions = get_case_law_from_db()
     results = []
     nq = normalize(q)
 
-    for decision in CASE_LAW:
+    for decision in decisions:
         score = 0
 
         if nq:
