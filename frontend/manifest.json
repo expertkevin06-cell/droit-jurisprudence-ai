@@ -15,7 +15,7 @@
       "purpose": "any"
     },
     {
-      "src": "COLLE-ICI-LE-LIEN-DE-L-IMAGE",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
