@@ -1,0 +1,45 @@
+name: CI Justice Auto Robuste
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  backend-validation:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+
+      - name: Validate legal sources
+        run: |
+          python validator.py
+
+      - name: Run tests
+        env:
+          ADMIN_USERNAME: ExpertKF
+          ADMIN_PASSWORD_HASH: dummy-hash-for-tests
+          API_ALLOWED_ORIGIN: http://localhost:3000
+          TOKEN_TTL_SECONDS: 3600
+        run: |
+          pytest tests -v
