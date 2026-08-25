@@ -1,0 +1,2 @@
+rsvg-convert -w 192 -h 192 frontend/icons/icon.svg -o frontend/icon-192.png
+rsvg-convert -w 512 -h 512 frontend/icons/icon.svg -o frontend/icon-512.png
