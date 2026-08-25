@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtualenv
+.venv/
+venv/
+env/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated icons
+frontend/icon-192.png
+frontend/icon-512.png
+
+# Secrets
+*.pem
+*.p12
+*.jks
+firebase-service-account.json
+google-application-credentials.json
