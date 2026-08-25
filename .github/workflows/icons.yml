@@ -1,0 +1,32 @@
+name: Generate Icons
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/icons/icon.svg'
+
+jobs:
+  icons:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Convertir SVG en PNG
+        run: |
+          cd frontend
+          rsvg-convert -w 192 -h 192 icons/icon.svg -o icon-192.png || convert -background none icons/icon.svg -resize 192x192 icon-192.png
+          rsvg-convert -w 512 -h 512 icons/icon.svg -o icon-512.png || convert -background none icons/icon.svg -resize 512x512 icon-512.png
+
+      - name: Committer les icônes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add frontend/icon-192.png frontend/icon-512.png
+          git commit -m "Generate app icons" || echo "nothing to commit"
+          git push
