@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Justice Auto</title>
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #111;
+            color: #eee;
+        }
+
+        .screen {
+            min-height: 100vh;
+            padding: 25px;
+            box-sizing: border-box;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        h1, h2, h3 {
+            color: #d4af37;
+        }
+
+        .box {
+            max-width: 650px;
+            margin: 30px auto;
+            background: #1a1a1a;
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #222;
+            color: #eee;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        input.greyed {
+            background: #181818;
+            color: #777;
+            border: 1px solid #333;
+            cursor: not-allowed;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #d4af37;
+            color: #111;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:active {
+            background: #b5952f;
+        }
+
+        .warning {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #ffcc00;
+        }
+
+        .card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 12px 0;
+        }
+
+        .official {
+            border-left: 5px solid #2e7d32;
+        }
+
+        .case_law {
+            border-left: 5px solid #1565c0;
+        }
+
+        .doctrine {
+            border-left: 5px solid #d4af37;
+        }
+
+        a {
+            color: #d4af37;
+            text-decoration: none;
+        }
+
+        .small {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tabs button {
+            margin-top: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ÉCRAN AUTHENTIFICATION / DEMANDE D'ACCÈS -->
+    <div id="login-screen" class="screen">
+        <div class="box">
+            <h1>Justice Auto</h1>
+            <p>Version robuste avec sources officielles gratuites</p>
+
+            <div class="tabs">
+                <button onclick="switchAuthTab('login')">Connexion</button>
+                <button onclick="switchAuthTab('access')">Demande d'accès</button>
+            </div>
+
+            <div id="login-tab">
+                <label for="username">Identifiant</label>
+                <input id="username" type="text" autocomplete="username">
+
+                <label for="password">Mot de passe</label>
+                <input id="password" type="password" autocomplete="current-password">
+
+                <button onclick="login()">Connexion</button>
+
+                <div class="warning">
+                    Version robuste : le mot de passe ne doit pas être stocké en clair dans l'application.
+                </div>
+            </div>
+
+            <div id="access-tab" class="hidden">
+                <label for="access-contact">Contact</label>
+                <input id="access-contact" type="text" placeholder="Email ou téléphone">
+
+                <label for="access-message">Message</label>
+                <textarea id="access-message" placeholder="Expliquez votre demande d'accès"></textarea>
+
+                <button onclick="requestAccess()">Envoyer la demande</button>
+
+                <label for="access-request-id">Numéro de demande</label>
+                <input id="access-request-id" type="text" placeholder="ID de demande">
+
+                <button onclick="checkAccessStatus()">Vérifier le statut</button>
+
+                <div id="access-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÉCRAN APPLICATION -->
+    <div id="app-screen" class="screen hidden">
+        <h2>Tableau de bord</h2>
+
+        <div class="card">
+            <h3>Session</h3>
+            <p id="session-info"></p>
+            <button onclick="logout()">Déconnexion</button>
+        </div>
+
+        <div class="card">
+            <h3>Sources fiables et gratuites</h3>
+            <p class="small">
+                Legifrance est la source officielle principale. Dalloz est utilisé uniquement comme doctrine secondaire.
+            </p>
+            <button onclick="loadSources()">Charger les sources</button>
+            <div id="sources"></div>
+        </div>
+
+        <div class="card">
+            <h3>Analyse du litige</h3>
+
+            <label for="actor">Acteur concerné</label>
+            <select id="actor">
+                <option value="">-- Choisir --</option>
+                <option value="vendeur_professionnel">Vendeur professionnel</option>
+                <option value="vendeur_particulier">Vendeur particulier</option>
+                <option value="mandataire">Mandataire</option>
+                <option value="reparateur_professionnel">Réparateur professionnel</option>
+                <option value="centre_controle_technique">Contrôle technique</option>
+                <option value="acheteur">Acheteur</option>
+                <option value="expert_automobile">Expert automobile</option>
+                <option value="cabinet_expertise">Cabinet d'expertise</option>
+            </select>
+
+            <label for="context">Description du litige</label>
+            <textarea id="context" placeholder="Décrivez précisément le litige automobile..."></textarea>
+
+            <button onclick="analyzeCase()">Analyse documentaire</button>
+            <button onclick="aiAnalyzeCase()">Analyse IA contrôlée</button>
+
+            <div id="analysis-result"></div>
+        </div>
+
+        <div class="card">
+            <h3>Jurisprudence</h3>
+
+            <label for="case-law-query">Recherche</label>
+            <input id="case-law-query" type="text" placeholder="Exemple : vice caché moteur">
+
+            <label for="case-law-theme">Thème</label>
+            <select id="case-law-theme">
+                <option value="">-- Tous thèmes --</option>
+                <option value="vices_caches">Vices cachés</option>
+                <option value="garantie_legale_conformite">Garantie légale de conformité</option>
+                <option value="reparateur_responsabilite">Réparateur</option>
+                <option value="controle_technique">Contrôle technique</option>
+                <option value="expert_automobile">Expert automobile</option>
+                <option value="documents_administratifs_vente">Documents administratifs</option>
+            </select>
+
+            <button onclick="searchCaseLaw()">Rechercher</button>
+
+            <div id="case-law-result"></div>
+        </div>
+
+        <div class="card">
+            <h3>Demandes d'accès</h3>
+            <button onclick="loadAccessRequests()">Charger les demandes</button>
+            <div id="access-requests"></div>
+        </div>
+
+        <div class="card">
+            <h3>Notifications internes</h3>
+            <button onclick="loadNotifications()">Charger les notifications</button>
+            <div id="notifications"></div>
+        </div>
+
+        <div class="card">
+            <h3>Notifications appareil</h3>
+            <button onclick="enableNotifications()">Activer les notifications</button>
+            <div id="notification-status"></div>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            apiUrl: "http://127.0.0.1:8000",
+
+            // Robuste : seul l'identifiant peut être prérempli.
+            // Le mot de passe ne doit pas être prérempli en production.
+            unsafeDemoUsername: true,
+            unsafeDemoPassword: false
+        };
+
+        let token = localStorage.getItem("justice_auto_token") || "";
+
+        function switchAuthTab(tab) {
+            document.getElementById("login-tab").classList.toggle("hidden", tab !== "login");
+            document.getElementById("access-tab").classList.toggle("hidden", tab !== "access");
+        }
+
+        function showApp() {
+            document.getElementById("login-screen").classList.add("hidden");
+            document.getElementById("app-screen").classList.remove("hidden");
+            document.getElementById("session-info").textContent = "Connecté.";
+            loadSources();
+        }
+
+        function showLogin() {
+            document.getElementById("login-screen").classList.remove("hidden");
+            document.getElementById("app-screen").classList.add("hidden");
+        }
+
+        function logout() {
+            token = "";
+            localStorage.removeItem("justice_auto_token");
+            showLogin();
+        }
+
+        async function apiFetch(path, options = {}) {
+            const headers = options.headers || {};
+
+            if (token) {
+                headers["Authorization"] = `Bearer ${token}`;
+            }
+
+            if (options.body) {
+                headers["Content-Type"] = "application/json";
+            }
+
+            const response = await fetch(`${CONFIG.apiUrl}${path}`, {
+                ...options,
+                headers
+            });
+
+            if (response.status === 401 && path !== "/api/login") {
+                logout();
+                throw new Error("Authentification requise");
+            }
+
+            return response;
+        }
+
+        async function login() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+
+            try {
+                const response = await apiFetch("/api/login", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        username,
+                        password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.detail || "Connexion refusée.");
+                    return;
+                }
+
+                token = data.token;
+                localStorage.setItem("justice_auto_token", token);
+                showApp();
+            } catch (error) {
+                alert("Impossible de contacter le serveur.");
+                console.error(error);
+            }
+        }
+
+        function getDeviceId() {
+            let deviceId = localStorage.getItem("justice_auto_device_id");
+
+            if (!deviceId) {
+                deviceId = "device-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+                localStorage.setItem("justice_auto_device_id", deviceId);
+            }
+
+            return deviceId;
+        }
+
+        async function requestAccess() {
+            const contact = document.getElementById("access-contact").value.trim();
+            const message = document.getElementById("access-message").value.trim();
+            const deviceId = getDeviceId();
+
+            try {
+                const response = await fetch(`${CONFIG.apiUrl}/api/access/request`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        device_id: deviceId,
+                        contact,
+                        message
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.detail || "Impossible d'envoyer la demande.");
+                    return;
+                }
+
+                document.getElementById("access-status").innerHTML = `
+                    <p>Demande envoyée.</p>
+                    <p><strong>ID :</strong> ${data.id}</p>
+                    <p>Conservez cet ID pour vérifier le statut.</p>
+                `;
+            } catch (error) {
+                alert("Impossible d'envoyer la demande.");
+                console.error(error);
+            }
+        }
+
+        async function checkAccessStatus() {
+            const requestId = document.getElementById("access-request-id").value.trim();
+            const statusBox = document.getElementById("access-status");
+
+            if (!requestId) {
+                statusBox.innerHTML = "<p>Veuillez saisir un ID de demande.</p>";
+                return;
+            }
+
+            try {
+                const response = await fetch(`${CONFIG.apiUrl}/api/access/status/${requestId}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    statusBox.innerHTML = `<p>${data.detail || "Demande introuvable."}</p>`;
+                    return;
+                }
+
+                statusBox.innerHTML = `
+                    <p><strong>ID :</strong> ${data.id}</p>
+                    <p><strong>Statut :</strong> ${data.status}</p>
+                    <p><strong>Créée le :</strong> ${data.created_at}</p>
+                `;
+            } catch (error) {
+                statusBox.innerHTML = "<p>Impossible de vérifier le statut.</p>";
+                console.error(error);
+            }
+        }
+
+        async function loadSources() {
+            const container = document.getElementById("sources");
+            container.innerHTML = "<p>Chargement...</p>";
+
+            try {
+                const response = await apiFetch("/api/sources");
+                const data = await response.json();
+
+                if (!response.ok) {
+                    container.innerHTML = "<p>Erreur lors du chargement des sources.</p>";
+                    return;
+                }
+
+                container.innerHTML = "";
+
+                data.sources.forEach(source => {
+                    const card = document.createElement("div");
+
+                    let className = "card";
+
+                    if (source.type === "official") className += " official";
+                    if (source.type === "case_law") className += " case_law";
+                    if (source.type === "doctrine") className += " doctrine";
+
+                    card.className = className;
+
+                    card.innerHTML = `
+                        <h3>${source.name}</h3>
+                        <p><strong>Type :</strong> ${source.type}</p>
+                        <p><strong>Priorité :</strong> ${source.trust_level}</p>
+                        <p>${source.description}</p>
+                        <p>
+                            <a href="${source.url}" target="_blank" rel="noopener noreferrer">
+                                Ouvrir la source
+                            </a>
+                        </p>
+                    `;
+
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                container.innerHTML = "<p>Impossible de charger les sources.</p>";
+                console.error(error);
+            }
+        }
+
+        async function analyzeCase() {
+            const actor = document.getElementById("actor").value;
+            const context = document.getElementById("context").value;
+            const result = document.getElementById("analysis-result");
+
+            if (!context || context.trim().length < 20) {
+                result.innerHTML = "<p>Veuillez décrire le litige avec au moins 20 caractères.</p>";
+                return;
+            }
+
+            result.innerHTML = "<p>Analyse en cours...</p>";
+
+            try {
+                const response = await apiFetch("/api/analyze", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        context,
+                        actor: actor || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    result.innerHTML = `<p>${data.detail || "Erreur API"}</p>`;
+                    return;
+                }
+
+                if (data.status === "insufficient_data") {
+                    result.innerHTML = `
+                        <p><strong>Données insuffisantes.</strong></p>
+                        <p>${data.message}</p>
+                    `;
+                    return;
+                }
+
+                let html = "<h4>Hypothèses juridiques</h4>";
+
+                data.hypotheses.forEach((h, index) => {
+                    html += `
+                        <div class="card">
+                            <p><strong>${index + 1}. Partie :</strong> ${h.party}</p>
+                            <p><strong>Fondement :</strong> ${h.ground}</p>
+                            <p><strong>Plausibilité :</strong> ${h.plausibility}</p>
+                            <p><strong>Règle :</strong> ${h.rule_title}</p>
+                            <p>${h.explanation}</p>
+
+                            <p><strong>Base légale :</strong></p>
+                            <ul>
+                                ${h.legal_basis.map(basis => `
+                                    <li>${basis.code} : ${basis.articles.join(", ")}</li>
+                                `).join("")}
+                            </ul>
+
+                            <p><strong>Sources :</strong></p>
+                            <ul>
+                                ${h.sources.map(source => `
+                                    <li>
+                                        <a href="${source.url}" target="_blank" rel="noopener noreferrer">
+                                            ${source.name}
+                                        </a>
+                                    </li>
+                                `).join("")}
+                            </ul>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    <div class="warning">
+                        Analyse fournie à titre d'information juridique.
+                        Elle ne remplace pas un avocat.
+                    </div>
+                `;
+
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = "<p>Impossible de contacter le serveur d'analyse.</p>";
+                console.error(error);
+            }
+        }
+
+        async function aiAnalyzeCase() {
+            const actor = document.getElementById("actor").value;
+            const context = document.getElementById("context").value;
+            const result = document.getElementById("analysis-result");
+
+            if (!context || context.trim().length < 20) {
+                result.innerHTML = "<p>Veuillez décrire le litige avec au moins 20 caractères.</p>";
+                return;
+            }
+
+            result.innerHTML = "<p>Analyse IA contrôlée en cours...</p>";
+
+            try {
+                const response = await apiFetch("/api/ai/analyze", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        context,
+                        actor: actor || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    result.innerHTML = `<p>${data.detail || "Erreur API"}</p>`;
+                    return;
+                }
+
+                if (data.status === "llm_not_configured") {
+                    result.innerHTML = `
+                        <p><strong>IA non configurée.</strong></p>
+                        <p>${data.message}</p>
+                        <p>Le système peut fonctionner avec l'analyse documentaire locale.</p>
+                    `;
+                    return;
+                }
+
+                if (data.status === "insufficient_data") {
+                    result.innerHTML = `
+                        <p><strong>Données insuffisantes.</strong></p>
+                        <p>${data.message || "Aucune règle suffisante."}</p>
+                    `;
+                    return;
+                }
+
+                let html = "<h4>Analyse IA contrôlée</h4>";
+
+                if (Array.isArray(data.hypotheses)) {
+                    data.hypotheses.forEach((h, index) => {
+                        html += `
+                            <div class="card">
+                                <p><strong>${index + 1}. Partie :</strong> ${h.party || "Non précisé"}</p>
+                                <p><strong>Fondement :</strong> ${h.ground || "Non précisé"}</p>
+                                <p><strong>Plausibilité :</strong> ${h.plausibility || "Non précisé"}</p>
+                                <p>${h.explanation || ""}</p>
+                            </div>
+                        `;
+                    });
+                }
+
+                if (Array.isArray(data.missing_facts) && data.missing_facts.length) {
+                    html += "<p><strong>Informations manquantes :</strong></p><ul>";
+
+                    data.missing_facts.forEach(item => {
+                        html += `<li>${item}</li>`;
+                    });
+
+                    html += "</ul>";
+                }
+
+                html += `
+                    <div class="warning">
+                        Analyse IA fournie à titre d'information juridique.
+                        Elle ne remplace pas un avocat.
+                    </div>
+                `;
+
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = "<p>Impossible de contacter l'IA.</p>";
+                console.error(error);
+            }
+        }
+
+        async function searchCaseLaw() {
+            const q = document.getElementById("case-law-query").value.trim();
+            const theme = document.getElementById("case-law-theme").value;
+            const actor = document.getElementById("actor").value;
+            const result = document.getElementById("case-law-result");
+
+            result.innerHTML = "<p>Recherche...</p>";
+
+            try {
+                const params = new URLSearchParams();
+
+                if (q) params.append("q", q);
+                if (theme) params.append("theme", theme);
+                if (actor) params.append("actor", actor);
+
+                const response = await apiFetch(`/api/case-law/search?${params.toString()}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    result.innerHTML = `<p>${data.detail || "Erreur"}</p>`;
+                    return;
+                }
+
+                if (!data.results.length) {
+                    result.innerHTML = "<p>Aucune décision trouvée.</p>";
+                    return;
+                }
+
+                let html = "";
+
+                data.results.forEach(decision => {
+                    html += `
+                        <div class="card">
+                            <p><strong>Juridiction :</strong> ${decision.court}</p>
+                            <p><strong>Référence :</strong> ${decision.reference}</p>
+                            <p><strong>Date :</strong> ${decision.decision_date || "Non renseignée"}</p>
+                            <p>${decision.summary}</p>
+                            <p>
+                                <a href="${decision.url}" target="_blank" rel="noopener noreferrer">
+                                    Voir la source
+                                </a>
+                            </p>
+                        </div>
+                    `;
+                });
+
+                result.innerHTML = html;
+            } catch (error) {
+                result.innerHTML = "<p>Impossible de rechercher la jurisprudence.</p>";
+                console.error(error);
+            }
+        }
+
+        async function loadAccessRequests() {
+            const container = document.getElementById("access-requests");
+            container.innerHTML = "<p>Chargement...</p>";
+
+            try {
+                const response = await apiFetch("/api/admin/access-requests");
+                const data = await response.json();
+
+                if (!response.ok) {
+                    container.innerHTML = `<p>${data.detail || "Erreur"}</p>`;
+                    return;
+                }
+
+                if (!data.requests.length) {
+                    container.innerHTML = "<p>Aucune demande d'accès.</p>";
+                    return;
+                }
+
+                let html = "";
+
+                data.requests.forEach(request => {
+                    html += `
+                        <div class="card">
+                            <p><strong>ID :</strong> ${request.id}</p>
+                            <p><strong>Appareil :</strong> ${request.device_id}</p>
+                            <p><strong>Contact :</strong> ${request.contact || "Non renseigné"}</p>
+                            <p><strong>Message :</strong> ${request.message || "Aucun message"}</p>
+                            <p><strong>Statut :</strong> ${request.status}</p>
+
+                            ${
+                                request.status === "pending"
+                                ? `
+                                    <button onclick="reviewAccessRequest('${request.id}', 'approved')">Autoriser</button>
+                                    <button onclick="reviewAccessRequest('${request.id}', 'refused')">Refuser</button>
+                                `
+                                : ""
+                            }
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = "<p>Impossible de charger les demandes.</p>";
+                console.error(error);
+            }
+        }
+
+        async function reviewAccessRequest(requestId, decision) {
+            try {
+                const response = await apiFetch(
+                    `/api/admin/access-requests/${requestId}/review`,
+                    {
+                        method: "POST",
+                        body: JSON.stringify({
+                            decision,
+                            reason: null
+                        })
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.detail || "Erreur");
+                    return;
+                }
+
+                alert("Décision enregistrée.");
+                loadAccessRequests();
+            } catch (error) {
+                alert("Impossible de traiter la demande.");
+                console.error(error);
+            }
+        }
+
+        async function loadNotifications() {
+            const container = document.getElementById("notifications");
+            container.innerHTML = "<p>Chargement...</p>";
+
+            try {
+                const response = await apiFetch("/api/admin/notifications");
+                const data = await response.json();
+
+                if (!response.ok) {
+                    container.innerHTML = `<p>${data.detail || "Erreur"}</p>`;
+                    return;
+                }
+
+                if (!data.notifications.length) {
+                    container.innerHTML = "<p>Aucune notification.</p>";
+                    return;
+                }
+
+                let html = "";
+
+                data.notifications.forEach(notification => {
+                    html += `
+                        <div class="card">
+                            <p><strong>Titre :</strong> ${notification.title}</p>
+                            <p>${notification.body}</p>
+                            <p><strong>Date :</strong> ${notification.created_at}</p>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = "<p>Impossible de charger les notifications.</p>";
+                console.error(error);
+            }
+        }
+
+        async function enableNotifications() {
+            const status = document.getElementById("notification-status");
+
+            if (!("Notification" in window)) {
+                status.innerHTML = "Notifications non supportées.";
+                return;
+            }
+
+            const permission = await Notification.requestPermission();
+
+            if (permission === "granted") {
+                status.innerHTML = "Notifications activées.";
+            } else {
+                status.innerHTML = "Notifications refusées.";
+            }
+        }
+
+        if (CONFIG.unsafeDemoUsername) {
+            const username = document.getElementById("username");
+            username.value = "ExpertKF";
+            username.readOnly = true;
+            username.classList.add("greyed");
+        }
+
+        if (CONFIG.unsafeDemoPassword) {
+            const password = document.getElementById("password");
+            password.value = "Kevin.83600";
+            password.readOnly = true;
+            password.classList.add("greyed");
+        }
+
+        if (token) {
+            showApp();
+        } else {
+            showLogin();
+        }
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js");
+        }
+    </script>
+</body>
+</html>
