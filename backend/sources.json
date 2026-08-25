@@ -1,0 +1,157 @@
+{
+  "sources": [
+    {
+      "id": "legifrance",
+      "name": "Legifrance",
+      "url": "https://www.legifrance.gouv.fr/",
+      "type": "official",
+      "trust_level": 1,
+      "primary": true,
+      "description": "Source officielle principale : codes, lois, règlements, textes consolidés."
+    },
+    {
+      "id": "service_public",
+      "name": "Service-public.fr",
+      "url": "https://www.service-public.fr/",
+      "type": "official",
+      "trust_level": 1,
+      "primary": true,
+      "description": "Fiches pratiques officielles pour les particuliers et démarches."
+    },
+    {
+      "id": "cour_cassation",
+      "name": "Cour de cassation",
+      "url": "https://www.courdecassation.fr/",
+      "type": "case_law",
+      "trust_level": 2,
+      "primary": true,
+      "description": "Jurisprudence judiciaire, droit civil, consommation, contrats."
+    },
+    {
+      "id": "conseil_etat",
+      "name": "Conseil d'État",
+      "url": "https://www.conseil-etat.fr/",
+      "type": "case_law",
+      "trust_level": 2,
+      "primary": true,
+      "description": "Jurisprudence administrative."
+    },
+    {
+      "id": "eur_lex",
+      "name": "EUR-Lex",
+      "url": "https://eur-lex.europa.eu/",
+      "type": "official",
+      "trust_level": 1,
+      "primary": true,
+      "description": "Droit de l'Union européenne."
+    },
+    {
+      "id": "data_gouv",
+      "name": "Data.gouv.fr",
+      "url": "https://www.data.gouv.fr/",
+      "type": "open_data",
+      "trust_level": 2,
+      "primary": true,
+      "description": "Données publiques françaises, jeux de données juridiques et administratives."
+    },
+    {
+      "id": "justice_gouv",
+      "name": "Ministère de la Justice",
+      "url": "https://www.justice.gouv.fr/",
+      "type": "official",
+      "trust_level": 1,
+      "primary": true,
+      "description": "Information officielle du ministère de la Justice."
+    },
+    {
+      "id": "interieur_gouv",
+      "name": "Ministère de l'Intérieur",
+      "url": "https://www.interieur.gouv.fr/",
+      "type": "official",
+      "trust_level": 1,
+      "primary": true,
+      "description": "Immatriculation, circulation, véhicules, sécurité."
+    },
+    {
+      "id": "securite_routiere",
+      "name": "Sécurité routière",
+      "url": "https://www.securiteroutiere.gouv.fr/",
+      "type": "official",
+      "trust_level": 1,
+      "primary": true,
+      "description": "Réglementation routière, prévention, sécurité."
+    },
+    {
+      "id": "dgccrf",
+      "name": "DGCCRF",
+      "url": "https://www.economie.gouv.fr/dgccrf",
+      "type": "official",
+      "trust_level": 1,
+      "primary": true,
+      "description": "Consommation, fraudes, pratiques commerciales, litiges consommateurs."
+    },
+    {
+      "id": "cnil",
+      "name": "CNIL",
+      "url": "https://www.cnil.fr/",
+      "type": "official",
+      "trust_level": 1,
+      "primary": true,
+      "description": "Protection des données personnelles, RGPD."
+    },
+    {
+      "id": "defenseur_droits",
+      "name": "Défenseur des droits",
+      "url": "https://www.defenseurdesdroits.fr/",
+      "type": "official",
+      "trust_level": 1,
+      "primary": true,
+      "description": "Défense des droits des usagers, médiation, discriminations."
+    },
+    {
+      "id": "hal",
+      "name": "HAL Science",
+      "url": "https://hal.science/",
+      "type": "doctrine",
+      "trust_level": 3,
+      "primary": false,
+      "description": "Doctrine académique ouverte."
+    },
+    {
+      "id": "openedition",
+      "name": "OpenEdition Journals",
+      "url": "https://journals.openedition.org/",
+      "type": "doctrine",
+      "trust_level": 3,
+      "primary": false,
+      "description": "Revues scientifiques ouvertes."
+    },
+    {
+      "id": "cairn",
+      "name": "Cairn.info",
+      "url": "https://www.cairn.info/",
+      "type": "doctrine",
+      "trust_level": 3,
+      "primary": false,
+      "description": "Articles doctrinaux, certains gratuits."
+    },
+    {
+      "id": "persee",
+      "name": "Persée",
+      "url": "https://www.persee.fr/",
+      "type": "doctrine",
+      "trust_level": 3,
+      "primary": false,
+      "description": "Archives scientifiques."
+    },
+    {
+      "id": "dalloz_public",
+      "name": "Dalloz - contenus publics",
+      "url": "https://www.dalloz.fr/",
+      "type": "doctrine",
+      "trust_level": 3,
+      "primary": false,
+      "description": "Doctrine secondaire, à utiliser uniquement si le contenu est légalement accessible."
+    }
+  ]
+}
