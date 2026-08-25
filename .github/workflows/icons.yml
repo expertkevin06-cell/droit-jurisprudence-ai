@@ -9,6 +9,9 @@ on:
     paths:
       - 'frontend/icons/icon.svg'
 
+permissions:
+  contents: write
+
 jobs:
   icons:
     runs-on: ubuntu-latest
@@ -27,6 +30,7 @@ jobs:
           cd frontend
           rsvg-convert -w 192 -h 192 icons/icon.svg -o icon-192.png
           rsvg-convert -w 512 -h 512 icons/icon.svg -o icon-512.png
+          ls -la icon-192.png icon-512.png
 
       - name: Committer les icônes
         run: |
