@@ -1,0 +1,443 @@
+[
+  {
+    "id": "vices_caches",
+    "title": "Garantie des vices cachés",
+    "actors": [
+      "vendeur_professionnel",
+      "vendeur_particulier",
+      "acheteur",
+      "mandataire"
+    ],
+    "keywords": [
+      "vice caché",
+      "défaut caché",
+      "panne",
+      "moteur",
+      "boîte de vitesses",
+      "antérieur à la vente",
+      "impropre à l'usage"
+    ],
+    "source_ids": [
+      "legifrance",
+      "cour_cassation"
+    ],
+    "legal_basis": [
+      {
+        "code": "Code civil",
+        "articles": [
+          "1641",
+          "1642",
+          "1643",
+          "1644",
+          "1648"
+        ]
+      }
+    ],
+    "summary": "Le vendeur peut être tenu des défauts cachés du véhicule antérieurs à la vente et qui rendent le véhicule impropre à l'usage ou diminuent fortement son usage.",
+    "conditions": [
+      "Le défaut doit être caché",
+      "Le défaut doit être antérieur à la vente",
+      "Le défaut doit rendre le véhicule impropre à l'usage ou en diminuer fortement l'usage",
+      "La preuve du défaut doit être rapportée, souvent par expertise"
+    ],
+    "effects": [
+      "Résolution de la vente",
+      "Réduction du prix",
+      "Restitution du véhicule",
+      "Dommages-intérêts selon les cas"
+    ],
+    "review_required": true,
+    "hypotheses": [
+      {
+        "party": "vendeur_professionnel",
+        "ground": "vices_caches",
+        "plausibility": "elevee",
+        "priority": 1,
+        "explanation": "Si le défaut est antérieur, caché et grave, la responsabilité du vendeur professionnel est une piste majeure."
+      },
+      {
+        "party": "vendeur_particulier",
+        "ground": "vices_caches",
+        "plausibility": "moyenne",
+        "priority": 2,
+        "explanation": "La responsabilité du vendeur particulier peut être recherchée si la preuve du vice caché est suffisante."
+      }
+    ]
+  },
+  {
+    "id": "garantie_legale_conformite",
+    "title": "Garantie légale de conformité",
+    "actors": [
+      "vendeur_professionnel",
+      "acheteur"
+    ],
+    "keywords": [
+      "non conforme",
+      "conformité",
+      "garantie légale",
+      "véhicule non conforme",
+      "usage attendu"
+    ],
+    "source_ids": [
+      "legifrance",
+      "service_public"
+    ],
+    "legal_basis": [
+      {
+        "code": "Code de la consommation",
+        "articles": [
+          "L217-3 et suivants"
+        ]
+      }
+    ],
+    "summary": "Le vendeur professionnel doit livrer un bien conforme au contrat. La garantie légale de conformité peut s'appliquer lorsque le véhicule présente un défaut de conformité.",
+    "conditions": [
+      "Vente par un professionnel",
+      "Acheteur consommateur",
+      "Défaut de conformité",
+      "Défaut existant lors de la délivrance"
+    ],
+    "effects": [
+      "Réparation",
+      "Remplacement",
+      "Réduction du prix",
+      "Résolution du contrat selon les cas"
+    ],
+    "review_required": true,
+    "hypotheses": [
+      {
+        "party": "vendeur_professionnel",
+        "ground": "garantie_legale_conformite",
+        "plausibility": "elevee",
+        "priority": 1,
+        "explanation": "Si l'acheteur est consommateur et que le véhicule n'est pas conforme, la garantie légale de conformité peut être mobilisée."
+      }
+    ]
+  },
+  {
+    "id": "delivrance_conforme",
+    "title": "Obligation de délivrance conforme",
+    "actors": [
+      "vendeur_professionnel",
+      "vendeur_particulier",
+      "acheteur"
+    ],
+    "keywords": [
+      "délivrance",
+      "bien délivré",
+      "non conforme",
+      "caractéristiques convenues"
+    ],
+    "source_ids": [
+      "legifrance"
+    ],
+    "legal_basis": [
+      {
+        "code": "Code civil",
+        "articles": [
+          "1604 et suivants"
+        ]
+      }
+    ],
+    "summary": "Le vendeur doit délivrer un bien conforme à ce qui a été convenu avec l'acheteur.",
+    "conditions": [
+      "Existence d'une vente",
+      "Détermination des caractéristiques du véhicule",
+      "Écart entre le véhicule délivré et ce qui était convenu"
+    ],
+    "effects": [
+      "Exécution forcée",
+      "Résolution",
+      "Dommages-intérêts"
+    ],
+    "review_required": true,
+    "hypotheses": [
+      {
+        "party": "vendeur",
+        "ground": "delivrance_conforme",
+        "plausibility": "moyenne",
+        "priority": 2,
+        "explanation": "Si le véhicule ne correspond pas aux caractéristiques convenues, l'obligation de délivrance conforme peut être invoquée."
+      }
+    ]
+  },
+  {
+    "id": "dol_tromperie",
+    "title": "Dol et tromperie",
+    "actors": [
+      "vendeur_professionnel",
+      "vendeur_particulier",
+      "mandataire",
+      "acheteur"
+    ],
+    "keywords": [
+      "dol",
+      "tromperie",
+      "mensonge",
+      "dissimulation",
+      "compteur",
+      "accident caché",
+      "fausse annonce"
+    ],
+    "source_ids": [
+      "legifrance",
+      "cour_cassation"
+    ],
+    "legal_basis": [
+      {
+        "code": "Code civil",
+        "articles": [
+          "1130",
+          "1137"
+        ]
+      }
+    ],
+    "summary": "Le dol peut résulter de manœuvres, de mensonges ou de la dissimulation intentionnelle d'une information essentielle pour l'acheteur.",
+    "conditions": [
+      "Manœuvre, mensonge ou dissimulation",
+      "Caractère intentionnel",
+      "Information essentielle",
+      "Influence sur le consentement"
+    ],
+    "effects": [
+      "Nullité du contrat",
+      "Dommages-intérêts",
+      "Restitutions"
+    ],
+    "review_required": true,
+    "hypotheses": [
+      {
+        "party": "vendeur",
+        "ground": "dol",
+        "plausibility": "moyenne",
+        "priority": 2,
+        "explanation": "Si une information essentielle a été dissimulée volontairement, la qualification de dol peut être envisagée."
+      }
+    ]
+  },
+  {
+    "id": "reparateur_responsabilite",
+    "title": "Responsabilité du réparateur automobile",
+    "actors": [
+      "reparateur_professionnel",
+      "proprietaire_vehicule",
+      "assurance"
+    ],
+    "keywords": [
+      "garagiste",
+      "réparateur",
+      "réparation",
+      "malfaçon",
+      "non-façon",
+      "devis",
+      "facture",
+      "panne après réparation"
+    ],
+    "source_ids": [
+      "legifrance",
+      "cour_cassation"
+    ],
+    "legal_basis": [
+      {
+        "code": "Code civil",
+        "articles": [
+          "1104",
+          "1231-1"
+        ]
+      },
+      {
+        "code": "Code de la consommation",
+        "articles": [
+          "L111-1",
+          "L111-2"
+        ]
+      }
+    ],
+    "summary": "Le réparateur automobile peut engager sa responsabilité contractuelle en cas de mauvaise exécution de la prestation, de défaut de conseil ou de manquement à ses obligations.",
+    "conditions": [
+      "Existence d'une prestation de réparation",
+      "Description de la prestation",
+      "Dommage ou persistance du trouble",
+      "Lien entre la prestation et le dommage"
+    ],
+    "effects": [
+      "Reprise de la réparation",
+      "Remboursement",
+      "Dommages-intérêts",
+      "Expertise"
+    ],
+    "review_required": true,
+    "hypotheses": [
+      {
+        "party": "reparateur_professionnel",
+        "ground": "responsabilite_contractuelle",
+        "plausibility": "moyenne",
+        "priority": 2,
+        "explanation": "La responsabilité du réparateur peut être discutée si le dommage est lié à une intervention mal exécutée."
+      }
+    ]
+  },
+  {
+    "id": "controle_technique",
+    "title": "Contrôle technique automobile",
+    "actors": [
+      "centre_controle_technique",
+      "vendeur_professionnel",
+      "vendeur_particulier",
+      "acheteur"
+    ],
+    "keywords": [
+      "contrôle technique",
+      "CT",
+      "procès-verbal",
+      "défaut non détecté",
+      "panne après contrôle"
+    ],
+    "source_ids": [
+      "legifrance",
+      "service_public",
+      "securite_routiere"
+    ],
+    "legal_basis": [
+      {
+        "code": "Code de la route",
+        "articles": [
+          "L323-1 et suivants",
+          "R323-1 et suivants"
+        ]
+      }
+    ],
+    "summary": "Le contrôle technique est réglementé. Il ne garantit pas l'absence de tous les défauts, mais des manquements peuvent être recherchés selon les circonstances.",
+    "conditions": [
+      "Vérifier la date du contrôle",
+      "Vérifier le contenu du procès-verbal",
+      "Identifier le défaut reproché",
+      "Déterminer si le défaut entrait dans le périmètre du contrôle"
+    ],
+    "effects": [
+      "Responsabilité éventuelle du centre",
+      "Responsabilité du vendeur",
+      "Demande d'indemnisation"
+    ],
+    "review_required": true,
+    "hypotheses": [
+      {
+        "party": "centre_controle_technique",
+        "ground": "manquement_aux_obligations_de_controle",
+        "plausibility": "faible",
+        "priority": 3,
+        "explanation": "La responsabilité du centre de contrôle technique dépend du défaut, de sa détectabilité et du périmètre réglementaire du contrôle."
+      }
+    ]
+  },
+  {
+    "id": "expert_automobile",
+    "title": "Obligations de l'expert automobile",
+    "actors": [
+      "expert_automobile",
+      "cabinet_expertise",
+      "assurance",
+      "proprietaire_vehicule"
+    ],
+    "keywords": [
+      "expert",
+      "expertise",
+      "rapport",
+      "contradictoire",
+      "contre-expertise",
+      "partialité",
+      "mission"
+    ],
+    "source_ids": [
+      "legifrance",
+      "cour_cassation"
+    ],
+    "legal_basis": [
+      {
+        "code": "Code de procédure civile",
+        "articles": [
+          "16",
+          "232 et suivants",
+          "263 et suivants"
+        ]
+      }
+    ],
+    "summary": "L'expert doit accomplir sa mission avec compétence, impartialité et méthode. Le rapport doit pouvoir être discuté contradictoirement.",
+    "conditions": [
+      "Respect du contradictoire",
+      "Description claire de la mission",
+      "Examen sérieux du véhicule",
+      "Méthode explicite",
+      "Conclusions motivées"
+    ],
+    "effects": [
+      "Contestation du rapport",
+      "Contre-expertise",
+      "Expertise judiciaire",
+      "Responsabilité professionnelle en cas de faute"
+    ],
+    "review_required": true,
+    "hypotheses": [
+      {
+        "party": "expert_automobile",
+        "ground": "manquement_aux_obligations_d_expertise",
+        "plausibility": "faible",
+        "priority": 4,
+        "explanation": "La responsabilité de l'expert peut être envisagée en cas de faute démontrée dans sa mission."
+      }
+    ]
+  },
+  {
+    "id": "documents_administratifs_vente",
+    "title": "Documents administratifs pour la vente automobile",
+    "actors": [
+      "vendeur_professionnel",
+      "vendeur_particulier",
+      "acheteur",
+      "mandataire"
+    ],
+    "keywords": [
+      "carte grise",
+      "certificat d'immatriculation",
+      "certificat de cession",
+      "non-gage",
+      "situation administrative",
+      "documents de vente"
+    ],
+    "source_ids": [
+      "legifrance",
+      "service_public",
+      "interieur_gouv"
+    ],
+    "legal_basis": [
+      {
+        "code": "Code de la route",
+        "articles": [
+          "R322-1 et suivants"
+        ]
+      }
+    ],
+    "summary": "La vente d'un véhicule nécessite la remise de documents permettant la traçabilité de la cession et l'information de l'acheteur.",
+    "conditions": [
+      "Vérifier la carte grise",
+      "Vérifier la déclaration de cession",
+      "Vérifier la situation administrative",
+      "Vérifier le contrôle technique si applicable"
+    ],
+    "effects": [
+      "Blocage de l'immatriculation",
+      "Demande d'annulation",
+      "Responsabilité du vendeur"
+    ],
+    "review_required": true,
+    "hypotheses": [
+      {
+        "party": "vendeur",
+        "ground": "manquement_aux_obligations_administratives",
+        "plausibility": "moyenne",
+        "priority": 3,
+        "explanation": "Si les documents requis sont manquants ou inexacts, la vente peut être contestée selon les circonstances."
+      }
+    ]
+  }
+]
