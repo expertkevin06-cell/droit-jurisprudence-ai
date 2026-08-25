@@ -17,11 +17,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Installer les outils
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin
+
       - name: Convertir SVG en PNG
         run: |
           cd frontend
-          rsvg-convert -w 192 -h 192 icons/icon.svg -o icon-192.png || convert -background none icons/icon.svg -resize 192x192 icon-192.png
-          rsvg-convert -w 512 -h 512 icons/icon.svg -o icon-512.png || convert -background none icons/icon.svg -resize 512x512 icon-512.png
+          rsvg-convert -w 192 -h 192 icons/icon.svg -o icon-192.png
+          rsvg-convert -w 512 -h 512 icons/icon.svg -o icon-512.png
 
       - name: Committer les icônes
         run: |
