@@ -642,4 +642,105 @@
       "explanation": "RESPONSABILITÉ POSSIBLE du réparateur seulement si une intervention récente sur le moteur ou les injecteurs est liée à la panne ; sinon absence de responsabilité du réparateur."
     }
   ]
-}]
+,
+{
+  "id": "panne_moteur_injecteur_usure",
+  "title": "Panne moteur : vice caché, usure ou défaut d'entretien",
+  "actors": [
+    "vendeur_particulier",
+    "vendeur_professionnel",
+    "acheteur",
+    "reparateur_professionnel"
+  ],
+  "keywords": [
+    "injecteur",
+    "injecteur grippé",
+    "culasse",
+    "panne moteur",
+    "casse moteur",
+    "usure",
+    "vétusté",
+    "kilométrage",
+    "km",
+    "entretien",
+    "facture d'entretien",
+    "distribution",
+    "joint de culasse",
+    "vice caché",
+    "défaut caché",
+    "panne",
+    "moteur",
+    "antérieur à la vente",
+    "impropre à l'usage"
+  ],
+  "source_ids": [
+    "legifrance",
+    "cour_cassation",
+    "service_public"
+  ],
+  "legal_basis": [
+    {
+      "code": "Code civil",
+      "articles": ["1641", "1642", "1643", "1644", "1648"]
+    },
+    {
+      "code": "Code civil",
+      "articles": ["1104", "1231-1"]
+    },
+    {
+      "code": "Code de la consommation",
+      "articles": ["L217-3 et suivants"]
+    }
+  ],
+  "summary": "Une panne moteur (ex. injecteur grippé, culasse) peut relever du vice caché si le défaut était antérieur à la vente et caché, ou de l'usure normale, de la vétusté ou d'un défaut d'entretien, qui n'engagent pas la responsabilité du vendeur.",
+  "conditions": [
+    "Distinguer vice caché et usure normale : le vice caché est un défaut interne, antérieur à la vente, rendant le véhicule impropre à l'usage",
+    "L'usure liée au kilométrage, à l'âge ou au manque d'entretien n'est pas un vice caché",
+    "L'acheteur doit prouver le caractère antérieur et caché du défaut, souvent par expertise",
+    "Le vendeur professionnel est présumé connaître les vices ; le vendeur particulier peut ignorer le défaut",
+    "Un défaut d'entretien imputable à l'acheteur peut exclure la responsabilité du vendeur"
+  ],
+  "effects": [
+    "Si vice caché retenu : résolution ou réduction du prix, dommages-intérêts",
+    "Si usure ou vétusté retenue : pas de responsabilité du vendeur",
+    "Si défaut d'entretien imputable à l'acheteur : pas de responsabilité du vendeur"
+  ],
+  "review_required": true,
+  "hypotheses": [
+    {
+      "party": "vendeur_particulier",
+      "ground": "vices_caches",
+      "plausibility": "moyenne",
+      "priority": 1,
+      "explanation": "RESPONSABILITÉ POSSIBLE : si l'expertise établit que le grippage de l'injecteur ou le défaut de culasse existait avant la vente et n'était pas décelable, la garantie des vices cachés peut s'appliquer, même contre un vendeur particulier."
+    },
+    {
+      "party": "vendeur_particulier",
+      "ground": "absence_de_responsabilite_usure_vetuste",
+      "plausibility": "moyenne",
+      "priority": 2,
+      "explanation": "ABSENCE DE RESPONSABILITÉ POSSIBLE : si le grippage résulte de l'usure normale, du kilométrage, de l'âge du véhicule ou d'un manque d'entretien, ce n'est pas un vice caché et le vendeur particulier n'est pas responsable. Preuves utiles : historique cohérent, kilométrage normal, factures d'entretien remises à la vente."
+    },
+    {
+      "party": "acheteur",
+      "ground": "defaut_entretien_imputable_acheteur",
+      "plausibility": "moyenne",
+      "priority": 3,
+      "explanation": "RESPONSABILITÉ SUR L'ACHETEUR : si l'acheteur n'a pas assuré l'entretien normal (factures manquantes, intervalles dépassés), la panne peut lui être imputée et la responsabilité du vendeur écartée."
+    },
+    {
+      "party": "vendeur_professionnel",
+      "ground": "vices_caches",
+      "plausibility": "elevee",
+      "priority": 1,
+      "explanation": "RESPONSABILITÉ POSSIBLE : contre un vendeur professionnel, le vice caché est présumé connu ; si le défaut moteur est antérieur et caché, sa responsabilité est forte (ou garantie de conformité si l'acheteur est consommateur)."
+    },
+    {
+      "party": "reparateur_professionnel",
+      "ground": "responsabilite_contractuelle",
+      "plausibility": "faible",
+      "priority": 4,
+      "explanation": "RESPONSABILITÉ POSSIBLE du réparateur seulement si une intervention récente sur le moteur ou les injecteurs est liée à la panne ; sinon absence de responsabilité du réparateur."
+    }
+  ]
+]
