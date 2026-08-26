@@ -1,43 +1,40 @@
 import os
 import json
+
 import httpx
 
-SYSTEM_PROMPT = """
-Tu es un assistant d'aide à l'analyse juridique en droit automobile français.
 
-Tu ne remplaces pas un avocat.
-Tu fournis uniquement une information juridique générale.
-
-Tu dois répondre exclusivement à partir des documents juridiques fournis.
-Si les documents sont insuffisants, tu dois le dire.
-
-Tu ne dois jamais inventer :
-- un article de loi ;
-- une décision de justice ;
-- une date ;
-- une référence ;
-- une solution juridique.
-
-Tu dois produire une réponse JSON valide avec cette structure :
-
-{
-  "status": "ok" | "insufficient_data",
-  "hypotheses": [
-    {
-      "party": "...",
-      "ground": "...",
-      "plausibility": "faible" | "moyenne" | "elevee",
-      "explanation": "...",
-      "sources": ["..."]
-    }
-  ],
-  "missing_facts": ["..."],
-  "warnings": ["..."]
-}
-"""
+SYSTEM_PROMPT = (
+    "Tu es un assistant juridique français strict. "
+    "Tu réponds UNIQUEMENT avec du JSON valide, sans aucun texte autour. "
+    "Tu n'inventes jamais d'article, de décision ou de source. "
+    "Tu bases ta réponse exclusivement sur les documents juridiques fournis. "
+    "Si l'information est insuffisante, tu listes ce qui manque dans missing_facts."
+)
 
 
-def build_documents(context: str, rules: list, source_by_id: dict):
+def safe_parse_json(text: str):
+    if not text:
+        return None
+
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+
+    start = text.find("{")
+    end = text.rfind("}")
+
+    if start != -1 and end != -1 and end > start:
+        try:
+            return json.loads(text[start:end + 1])
+        except Exception:
+            return None
+
+    return None
+
+
+def build_prompt(context: str, rules: list, source_by_id: dict) -> str:
     documents = []
 
     for rule in rules:
@@ -48,14 +45,12 @@ def build_documents(context: str, rules: list, source_by_id: dict):
 
             if source:
                 sources.append({
-                    "id": source["id"],
-                    "name": source["name"],
-                    "url": source["url"],
-                    "trust_level": source["trust_level"]
+                    "name": source.get("name"),
+                    "url": source.get("url"),
+                    "trust_level": source.get("trust_level")
                 })
 
         documents.append({
-            "rule_id": rule.get("id"),
             "title": rule.get("title"),
             "summary": rule.get("summary"),
             "legal_basis": rule.get("legal_basis", []),
@@ -64,133 +59,154 @@ def build_documents(context: str, rules: list, source_by_id: dict):
             "sources": sources
         })
 
-    return documents
+    prompt = f"""
+Contexte du litige :
+{context}
 
+Documents juridiques de référence :
+{json.dumps(documents, ensure_ascii=False, indent=2)}
 
-def build_prompt(context: str, documents: list):
-    prompt = []
+Réponds UNIQUEMENT avec ce JSON :
+{{
+  "status": "ok",
+  "hypotheses": [
+    {{
+      "party": "...",
+      "ground": "...",
+      "plausibility": "faible|moyenne|elevee",
+      "explanation": "..."
+    }}
+  ],
+  "missing_facts": ["..."]
+}}
+"""
 
-    prompt.append(SYSTEM_PROMPT)
-    prompt.append("")
-    prompt.append("CONTEXTE DU LITIGE :")
-    prompt.append(context)
-    prompt.append("")
-    prompt.append("DOCUMENTS JURIDIQUES UTILISABLES :")
-    prompt.append(json.dumps(documents, ensure_ascii=False, indent=2))
-    prompt.append("")
-    prompt.append("Réponds uniquement avec du JSON valide.")
-
-    return "\n".join(prompt)
-
-
-def safe_parse_json(text: str):
-    try:
-        return json.loads(text)
-    except Exception:
-        return None
-
-
-def call_llm(prompt: str):
-    provider = os.getenv("LLM_PROVIDER", "").lower()
-
-    if not provider:
-        return None
-
-    if provider == "ollama":
-        url = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
-        model = os.getenv("OLLAMA_MODEL", "mistral")
-
-        payload = {
-            "model": model,
-            "prompt": prompt,
-            "stream": False
-        }
-
-        response = httpx.post(url, json=payload, timeout=120)
-        response.raise_for_status()
-
-        data = response.json()
-
-        return data.get("response")
-
-    if provider == "custom":
-        url = os.getenv("LLM_API_URL")
-        api_key = os.getenv("LLM_API_KEY", "")
-
-        headers = {
-            "Content-Type": "application/json"
-        }
-
-        if api_key:
-            headers["Authorization"] = f"Bearer {api_key}"
-
-        payload = {
-            "model": os.getenv("LLM_MODEL", "legal-model"),
-            "messages": [
-                {
-                    "role": "system",
-                    "content": SYSTEM_PROMPT
-                },
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ],
-            "temperature": 0
-        }
-
-        response = httpx.post(url, headers=headers, json=payload, timeout=120)
-        response.raise_for_status()
-
-        data = response.json()
-
-        return data["choices"][0]["message"]["content"]
-
-    return None
+    return prompt
 
 
 def generate_ai_analysis(context: str, rules: list, source_by_id: dict):
-    documents = build_documents(context, rules, source_by_id)
+    provider = os.getenv("LLM_PROVIDER", "")
 
-    if not documents:
-        return {
-            "status": "insufficient_data",
-            "hypotheses": [],
-            "missing_facts": [
-                "Aucune règle juridique fiable n'a été trouvée."
-            ],
-            "warnings": [
-                "L'analyse IA nécessite des documents juridiques fiables."
-            ]
-        }
-
-    prompt = build_prompt(context, documents)
-
-    try:
-        raw_response = call_llm(prompt)
-    except Exception as error:
-        return {
-            "status": "llm_error",
-            "message": "Impossible de contacter le modèle IA.",
-            "error": str(error),
-            "documents": documents
-        }
-
-    if not raw_response:
+    if not provider:
         return {
             "status": "llm_not_configured",
             "message": "Aucun LLM configuré. Définissez LLM_PROVIDER, OLLAMA_API_URL ou LLM_API_URL.",
-            "documents": documents
+            "hypotheses": []
         }
 
-    parsed = safe_parse_json(raw_response)
+    prompt = build_prompt(context, rules, source_by_id)
 
-    if not parsed:
+    try:
+        raw = None
+
+        if provider == "ollama":
+            api_url = os.getenv(
+                "OLLAMA_API_URL",
+                "http://localhost:11434/api/generate"
+            )
+            model = os.getenv("OLLAMA_MODEL", "mistral")
+
+            response = httpx.post(
+                api_url,
+                json={
+                    "model": model,
+                    "prompt": SYSTEM_PROMPT + "\n\n" + prompt,
+                    "stream": False
+                },
+                timeout=120
+            )
+            response.raise_for_status()
+            raw = response.json().get("response", "")
+
+        if provider == "pollinations":
+            response = httpx.post(
+                "https://text.pollinations.ai/",
+                json={
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "model": "openai",
+                    "temperature": 0
+                },
+                timeout=120
+            )
+            response.raise_for_status()
+            raw = response.text
+
+        if provider == "custom":
+            api_url = os.getenv("LLM_API_URL")
+            api_key = os.getenv("LLM_API_KEY", "")
+
+            if not api_url:
+                return {
+                    "status": "llm_not_configured",
+                    "message": "LLM_API_URL manquant.",
+                    "hypotheses": []
+                }
+
+            headers = {}
+
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+
+            response = httpx.post(
+                api_url,
+                headers=headers,
+                json={
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "temperature": 0
+                },
+                timeout=120
+            )
+            response.raise_for_status()
+            data = response.json()
+            raw = data["choices"][0]["message"]["content"]
+
+        if raw is None:
+            return {
+                "status": "llm_not_configured",
+                "message": "Fournisseur LLM inconnu.",
+                "hypotheses": []
+            }
+
+        parsed = safe_parse_json(raw)
+
+        if not parsed:
+            return {
+                "status": "llm_invalid_json",
+                "message": "Le LLM a répondu dans un format invalide. Utilisez l'analyse documentaire.",
+                "hypotheses": []
+            }
+
+        allowed = ["faible", "moyenne", "elevee"]
+        hypotheses = []
+
+        for item in parsed.get("hypotheses", []):
+            plausibility = item.get("plausibility", "moyenne")
+
+            if plausibility not in allowed:
+                plausibility = "moyenne"
+
+            hypotheses.append({
+                "party": item.get("party", "partie_a_determiner"),
+                "ground": item.get("ground", "a_documenter"),
+                "plausibility": plausibility,
+                "explanation": item.get("explanation", "")
+            })
+
         return {
-            "status": "llm_invalid_json",
-            "message": "Le modèle IA n'a pas renvoyé un JSON valide.",
-            "raw_response": raw_response,
-            "documents": documents
+            "status": "ok",
+            "hypotheses": hypotheses,
+            "missing_facts": parsed.get("missing_facts", [])
         }
 
-    return parsed
+    except Exception as error:
+        return {
+            "status": "llm_error",
+            "message": f"Erreur LLM : {error}",
+            "hypotheses": []
+        }
