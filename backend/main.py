@@ -328,16 +328,38 @@ THEME_SYNONYMS = {
         "panne",
         "moteur",
         "injecteur",
+        "injection",
         "culasse",
+        "joint de culasse",
         "usure",
         "vétusté",
+        "kilométrage",
+        "km",
         "impropre à l'usage",
-        "caché"
+        "caché",
+        "grippé",
+        "grippage",
+        "casse moteur",
+        "perte de puissance",
+        "boîte de vitesses",
+        "boite de vitesse",
+        "boîte de vitesse",
+        "embrayage",
+        "bruit",
+        "bruits",
+        "craquement",
+        "craquements",
+        "courroie",
+        "turbo",
+        "surchauffe",
+        "démarrage"
     ],
     "garantie_legale_conformite": [
         "conformité",
         "non conforme",
-        "garantie légale"
+        "garantie légale",
+        "défaut après achat",
+        "panne après la vente"
     ],
     "reparateur_responsabilite": [
         "garagiste",
@@ -346,7 +368,10 @@ THEME_SYNONYMS = {
         "malfaçon",
         "devis",
         "facture",
-        "atelier"
+        "atelier",
+        "garage",
+        "intervention",
+        "après réparation"
     ],
     "controle_technique": [
         "contrôle technique",
