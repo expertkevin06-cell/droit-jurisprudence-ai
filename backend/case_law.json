@@ -1,0 +1,122 @@
+[
+  {
+    "id": "jl_vices_caches_1",
+    "court": "À compléter depuis source officielle",
+    "decision_date": null,
+    "reference": "À compléter",
+    "themes": ["vices_caches"],
+    "actors": ["vendeur_particulier", "vendeur_professionnel", "acheteur"],
+    "summary": "Type de solution à vérifier : un défaut antérieur à la vente, caché et rendant le véhicule impropre à l'usage, engage la garantie des vices cachés (Code civil 1641 et suivants).",
+    "url": "https://www.legifrance.gouv.fr/search/all?query=vice%20cach%C3%A9%20v%C3%A9hicule&tabSelection=JURI",
+    "source_id": "cour_cassation",
+    "verified": false
+  },
+  {
+    "id": "jl_vices_caches_2",
+    "court": "À compléter depuis source officielle",
+    "decision_date": null,
+    "reference": "À compléter",
+    "themes": ["vices_caches"],
+    "actors": ["vendeur_particulier", "acheteur"],
+    "summary": "Type de solution à vérifier : l'usure normale, la vétusté ou le défaut d'entretien ne constituent pas un vice caché ; la responsabilité du vendeur peut être écartée.",
+    "url": "https://www.legifrance.gouv.fr/search/all?query=vice%20cach%C3%A9%20usure%20v%C3%A9tust%C3%A9&tabSelection=JURI",
+    "source_id": "cour_cassation",
+    "verified": false
+  },
+  {
+    "id": "jl_vices_caches_3",
+    "court": "À compléter depuis source officielle",
+    "decision_date": null,
+    "reference": "À compléter",
+    "themes": ["vices_caches"],
+    "actors": ["vendeur_professionnel", "acheteur"],
+    "summary": "Type de solution à vérifier : le vendeur professionnel est présumé connaître le vice caché et ne peut pas s'exonérer facilement.",
+    "url": "https://www.legifrance.gouv.fr/search/all?query=vendeur%20professionnel%20vice%20cach%C3%A9%20pr%C3%A9sum%C3%A9&tabSelection=JURI",
+    "source_id": "cour_cassation",
+    "verified": false
+  },
+  {
+    "id": "jl_conformite_1",
+    "court": "À compléter depuis source officielle",
+    "decision_date": null,
+    "reference": "À compléter",
+    "themes": ["garantie_legale_conformite"],
+    "actors": ["vendeur_professionnel", "acheteur"],
+    "summary": "Type de solution à vérifier : le véhicule présentant une panne majeure peu après la vente peut être jugé non conforme (Code de la consommation L217-3 et suivants).",
+    "url": "https://www.legifrance.gouv.fr/search/all?query=garantie%20l%C3%A9gale%20de%20conformit%C3%A9%20v%C3%A9hicule&tabSelection=JURI",
+    "source_id": "legifrance",
+    "verified": false
+  },
+  {
+    "id": "jl_conformite_2",
+    "court": "À compléter depuis source officielle",
+    "decision_date": null,
+    "reference": "À compléter",
+    "themes": ["garantie_legale_conformite"],
+    "actors": ["vendeur_professionnel", "acheteur"],
+    "summary": "Type de solution à vérifier : l'acheteur consommateur peut choisir entre réparation et remplacement, ou réduction du prix si la mise en conformité est impossible.",
+    "url": "https://www.legifrance.gouv.fr/search/all?query=conformit%C3%A9%20v%C3%A9hicule%20r%C3%A9paration%20remplacement&tabSelection=JURI",
+    "source_id": "legifrance",
+    "verified": false
+  },
+  {
+    "id": "jl_reparateur_1",
+    "court": "À compléter depuis source officielle",
+    "decision_date": null,
+    "reference": "À compléter",
+    "themes": ["reparateur_responsabilite"],
+    "actors": ["reparateur_professionnel", "proprietaire_vehicule"],
+    "summary": "Type de solution à vérifier : le réparateur répond de la mauvaise exécution de sa prestation et doit garantir le résultat de sa réparation.",
+    "url": "https://www.legifrance.gouv.fr/search/all?query=r%C3%A9parateur%20automobile%20responsabilit%C3%A9&tabSelection=JURI",
+    "source_id": "cour_cassation",
+    "verified": false
+  },
+  {
+    "id": "jl_reparateur_2",
+    "court": "À compléter depuis source officielle",
+    "decision_date": null,
+    "reference": "À compléter",
+    "themes": ["reparateur_responsabilite"],
+    "actors": ["reparateur_professionnel", "proprietaire_vehicule"],
+    "summary": "Type de solution à vérifier : absence de responsabilité du réparateur si la panne provient d'une cause étrangère ou antérieure sans lien avec l'intervention.",
+    "url": "https://www.legifrance.gouv.fr/search/all?query=garagiste%20panne%20cause%20%C3%A9trang%C3%A8re&tabSelection=JURI",
+    "source_id": "cour_cassation",
+    "verified": false
+  },
+  {
+    "id": "jl_expert_1",
+    "court": "À compléter depuis source officielle",
+    "decision_date": null,
+    "reference": "À compléter",
+    "themes": ["expert_automobile", "vices_caches"],
+    "actors": ["expert_automobile", "cabinet_expertise", "assurance"],
+    "summary": "Type de solution à vérifier : le rapport d'expertise doit respecter le contradictoire ; sinon il peut être écarté ou complété par une contre-expertise.",
+    "url": "https://www.legifrance.gouv.fr/search/all?query=expertise%20automobile%20contradictoire&tabSelection=JURI",
+    "source_id": "cour_cassation",
+    "verified": false
+  },
+  {
+    "id": "jl_ct_1",
+    "court": "À compléter depuis source officielle",
+    "decision_date": null,
+    "reference": "À compléter",
+    "themes": ["controle_technique"],
+    "actors": ["centre_controle_technique", "acheteur", "vendeur"],
+    "summary": "Type de solution à vérifier : le contrôle technique ne garantit pas l'absence de tout défaut ; la responsabilité du centre dépend du périmètre contrôlé et de la détectabilité.",
+    "url": "https://www.legifrance.gouv.fr/search/all?query=contr%C3%B4le%20technique%20responsabilit%C3%A9%20d%C3%A9faut&tabSelection=JURI",
+    "source_id": "cour_cassation",
+    "verified": false
+  },
+  {
+    "id": "jl_docs_1",
+    "court": "À compléter depuis source officielle",
+    "decision_date": null,
+    "reference": "À compléter",
+    "themes": ["documents_administratifs_vente"],
+    "actors": ["vendeur_particulier", "vendeur_professionnel", "acheteur"],
+    "summary": "Type de solution à vérifier : l'absence de remise des documents de vente (carte grise, certificat de cession, non-gage) peut engager la responsabilité du vendeur.",
+    "url": "https://www.legifrance.gouv.fr/search/all?query=certificat%20de%20cession%20v%C3%A9hicule%20responsabilit%C3%A9&tabSelection=JURI",
+    "source_id": "legifrance",
+    "verified": false
+  }
+]
