@@ -260,6 +260,59 @@ def ensure_case_law_seed():
 ensure_case_law_seed()
 
 
+def load_case_law_file():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "case_law.json")
+
+    if not os.path.exists(path):
+        return
+
+    with open(path, "r", encoding="utf-8") as f:
+        decisions = json.load(f)
+
+    connection = db.get_connection()
+
+    try:
+        for decision in decisions:
+            connection.execute(
+                """
+                INSERT INTO case_law (
+                    id, court, decision_date, reference, themes, actors,
+                    summary, url, source_id, verified
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    court = excluded.court,
+                    decision_date = excluded.decision_date,
+                    reference = excluded.reference,
+                    themes = excluded.themes,
+                    actors = excluded.actors,
+                    summary = excluded.summary,
+                    url = excluded.url,
+                    source_id = excluded.source_id,
+                    verified = excluded.verified
+                """,
+                (
+                    decision["id"],
+                    decision.get("court"),
+                    decision.get("decision_date"),
+                    decision.get("reference"),
+                    json.dumps(decision.get("themes", []), ensure_ascii=False),
+                    json.dumps(decision.get("actors", []), ensure_ascii=False),
+                    decision.get("summary"),
+                    decision.get("url"),
+                    decision.get("source_id"),
+                    1 if decision.get("verified") else 0
+                )
+            )
+
+        connection.commit()
+    finally:
+        connection.close()
+
+
+load_case_law_file()
+
+
 def normalize(text: str) -> str:
     if not text:
         return ""
