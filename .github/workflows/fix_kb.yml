@@ -1,0 +1,42 @@
+name: Fix KB
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fix legal_kb.json
+        run: |
+          python - <<'PY'
+          import json
+          p = 'backend/legal_kb.json'
+          s = open(p, encoding='utf-8').read()
+          s = s.replace(']\n,\n{', ']\n},\n{')
+          data = json.loads(s)
+          seen = set()
+          out = []
+          for rule in data:
+              if rule.get('id') in seen:
+                  continue
+              seen.add(rule.get('id'))
+              out.append(rule)
+          open(p, 'w', encoding='utf-8').write(json.dumps(out, ensure_ascii=False, indent=2) + '\n')
+          print('REGLES FINALES :', len(out))
+          PY
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add backend/legal_kb.json
+          git commit -m "Fix legal_kb.json structure and duplicates" || echo "nothing to commit"
+          git push
