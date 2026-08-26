@@ -471,6 +471,69 @@ def get_case_law_from_db():
         connection.close()
 
 
+def retrieve_case_law(rules: list, context: str, actor: str | None):
+    decisions = get_case_law_from_db()
+    ctx = normalize(context)
+    rule_ids = [rule.get("id") for rule in rules]
+
+    theme_map = {
+        "vices_caches": ["vices_caches"],
+        "garantie_legale_conformite": ["garantie_legale_conformite"],
+        "delivrance_conforme": [
+            "garantie_legale_conformite",
+            "documents_administratifs_vente"
+        ],
+        "dol_tromperie": [
+            "vices_caches",
+            "documents_administratifs_vente"
+        ],
+        "reparateur_responsabilite": ["reparateur_responsabilite"],
+        "controle_technique": ["controle_technique"],
+        "expert_automobile": ["expert_automobile"],
+        "documents_administratifs_vente": ["documents_administratifs_vente"],
+        "panne_moteur_injecteur_usure": [
+            "vices_caches",
+            "reparateur_responsabilite",
+            "expert_automobile"
+        ]
+    }
+
+    wanted_themes = set()
+
+    for rule_id in rule_ids:
+        wanted_themes.update(theme_map.get(rule_id, [rule_id]))
+
+    results = []
+
+    for decision in decisions:
+        score = 0
+        themes = decision.get("themes", [])
+
+        if any(theme in wanted_themes for theme in themes):
+            score += 5
+
+        if ctx:
+            for theme in themes:
+                if normalize(theme) in ctx:
+                    score += 2
+
+            summary = normalize(decision.get("summary") or "")
+
+            for word in ctx.split():
+                if len(word) > 5 and word in summary:
+                    score += 1
+
+        if actor and actor in decision.get("actors", []):
+            score += 2
+
+        if score > 0:
+            results.append({**decision, "score": score})
+
+    results.sort(key=lambda item: item.get("score", 0), reverse=True)
+
+    return results[:6]
+
+
 @app.get("/")
 def root():
     return {
@@ -535,6 +598,7 @@ def analyze(payload: AnalyzeRequest, user=Depends(require_auth)):
         return {
             "status": "insufficient_data",
             "hypotheses": [],
+            "case_law": [],
             "message": "Aucune règle juridique fiable ne correspond suffisamment au contexte fourni.",
             "warnings": [
                 "Complétez les faits.",
@@ -546,9 +610,12 @@ def analyze(payload: AnalyzeRequest, user=Depends(require_auth)):
     hypotheses = build_hypotheses(rules)
     guardrail(hypotheses)
 
+    case_law = retrieve_case_law(rules, payload.context, payload.actor)
+
     return {
         "status": "ok",
         "hypotheses": hypotheses,
+        "case_law": case_law,
         "warnings": [
             "Analyse fournie à titre d'information juridique.",
             "Ne constitue pas une consultation juridique.",
