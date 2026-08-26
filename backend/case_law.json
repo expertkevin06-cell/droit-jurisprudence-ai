@@ -1,5 +1,17 @@
 [
   {
+    "id": "cass_1re_civ_2020_05_20_19_14_297",
+    "court": "Cour de cassation, 1re chambre civile",
+    "decision_date": "2020-05-20",
+    "reference": "n° 19-14.297",
+    "themes": ["vices_caches"],
+    "actors": ["vendeur_particulier", "vendeur_professionnel", "acheteur"],
+    "summary": "Arrêt indiqué par l'administrateur comme pertinent pour un litige de panne moteur / vice caché. Résumé à compléter depuis la source officielle.",
+    "url": "https://www.legifrance.gouv.fr/search/all?query=19-14.297&tabSelection=JURI",
+    "source_id": "cour_cassation",
+    "verified": false
+  },
+  {
     "id": "jl_vices_caches_1",
     "court": "À compléter depuis source officielle",
     "decision_date": null,
