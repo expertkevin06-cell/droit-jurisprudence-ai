@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 import validator
 import db
 from auth import verify_admin, validate_token
-from rag import generate_ai_analysis
+from rag import generate_ai_analysis, ai_extract_themes
 
 load_dotenv()
 
@@ -320,6 +320,67 @@ def normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text.lower().strip())
 
 
+THEME_SYNONYMS = {
+    "vices_caches": [
+        "vice caché",
+        "vices cachés",
+        "défaut caché",
+        "panne",
+        "moteur",
+        "injecteur",
+        "culasse",
+        "usure",
+        "vétusté",
+        "impropre à l'usage",
+        "caché"
+    ],
+    "garantie_legale_conformite": [
+        "conformité",
+        "non conforme",
+        "garantie légale"
+    ],
+    "reparateur_responsabilite": [
+        "garagiste",
+        "réparateur",
+        "réparation",
+        "malfaçon",
+        "devis",
+        "facture",
+        "atelier"
+    ],
+    "controle_technique": [
+        "contrôle technique",
+        "ct"
+    ],
+    "expert_automobile": [
+        "expert",
+        "expertise",
+        "contre-expertise",
+        "rapport"
+    ],
+    "documents_administratifs_vente": [
+        "carte grise",
+        "certificat",
+        "cession",
+        "non-gage",
+        "documents"
+    ]
+}
+
+
+def extract_themes_local(text: str):
+    ctx = normalize(text)
+    themes = set()
+
+    for theme, synonyms in THEME_SYNONYMS.items():
+        for synonym in synonyms:
+            if normalize(synonym) in ctx:
+                themes.add(theme)
+                break
+
+    return themes
+
+
 def get_primary_sources(rule: dict):
     result = []
 
@@ -498,7 +559,10 @@ def retrieve_case_law(rules: list, context: str, actor: str | None):
         ]
     }
 
-    wanted_themes = set()
+    wanted_themes = set(extract_themes_local(context))
+
+    ai_themes = ai_extract_themes(context, list(THEME_SYNONYMS.keys()))
+    wanted_themes.update(ai_themes)
 
     for rule_id in rule_ids:
         wanted_themes.update(theme_map.get(rule_id, [rule_id]))
@@ -996,27 +1060,47 @@ def search_case_law(
     user=Depends(require_auth)
 ):
     decisions = get_case_law_from_db()
+
+    text = " ".join(part for part in [q, actor, theme] if part)
+
+    themes = extract_themes_local(text)
+
+    if theme:
+        themes.add(theme)
+
+    ai_themes = ai_extract_themes(q or text, list(THEME_SYNONYMS.keys()))
+    themes.update(ai_themes)
+
     results = []
     nq = normalize(q)
 
     for decision in decisions:
         score = 0
+        decision_themes = decision.get("themes", [])
+
+        if any(t in themes for t in decision_themes):
+            score += 5
 
         if nq:
-            if nq in normalize(decision.get("summary") or ""):
+            summary = normalize(decision.get("summary") or "")
+            reference = normalize(decision.get("reference") or "")
+
+            if nq in summary:
                 score += 3
 
-            if nq in normalize(decision.get("reference") or ""):
+            if nq in reference:
                 score += 3
 
-            if any(nq in normalize(theme_item) for theme_item in decision.get("themes", [])):
-                score += 4
+            for word in nq.split():
+                if len(word) > 3:
+                    if word in summary:
+                        score += 1
+
+                    if word in reference:
+                        score += 2
 
         if actor and actor in decision.get("actors", []):
-            score += 5
-
-        if theme and theme in decision.get("themes", []):
-            score += 5
+            score += 2
 
         if score > 0 or (not q and not actor and not theme):
             results.append({
@@ -1027,6 +1111,7 @@ def search_case_law(
     results.sort(key=lambda item: item.get("score", 0), reverse=True)
 
     return {
-        "results": results,
+        "results": results[:10],
+        "themes_detectes": sorted(themes),
         "warning": "Les décisions doivent être importées depuis des sources officielles et vérifiées."
     }
