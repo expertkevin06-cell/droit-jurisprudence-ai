@@ -216,12 +216,14 @@
 
             <div id="analysis-result"></div>
         </div>
-<div class="card">
+
+        <div class="card">
             <h3>Fiches juridiques complètes</h3>
             <p class="small">Conditions, effets, base légale et résumé de chaque fiche.</p>
             <button onclick="loadLegalRules()">Charger les fiches</button>
             <div id="legal-rules"></div>
         </div>
+
         <div class="card">
             <h3>Jurisprudence</h3>
 
@@ -619,7 +621,7 @@
                     html += "<p><strong>Informations manquantes :</strong></p><ul>";
 
                     data.missing_facts.forEach(item => {
-                        html += `<li>${item}</li>`;
+                        html += `<li>${item}</li>``;
                     });
 
                     html += "</ul>";
@@ -819,6 +821,52 @@
                 status.innerHTML = "Notifications activées.";
             } else {
                 status.innerHTML = "Notifications refusées.";
+            }
+        }
+
+        async function loadLegalRules() {
+            const container = document.getElementById("legal-rules");
+            container.innerHTML = "<p>Chargement...</p>";
+
+            try {
+                const response = await apiFetch("/api/legal-rules");
+                const data = await response.json();
+
+                if (!response.ok) {
+                    container.innerHTML = "<p>Erreur de chargement.</p>";
+                    return;
+                }
+
+                let html = "";
+
+                data.rules.forEach(rule => {
+                    html += `
+                        <div class="card official">
+                            <h3>${rule.title}</h3>
+                            <p>${rule.summary}</p>
+
+                            <p><strong>Conditions :</strong></p>
+                            <ul>
+                                ${rule.conditions.map(c => `<li>${c}</li>`).join("")}
+                            </ul>
+
+                            <p><strong>Effets :</strong></p>
+                            <ul>
+                                ${rule.effects.map(e => `<li>${e}</li>`).join("")}
+                            </ul>
+
+                            <p><strong>Base légale :</strong></p>
+                            <ul>
+                                ${rule.legal_basis.map(b => `<li>${b.code} : ${b.articles.join(", ")}</li>`).join("")}
+                            </ul>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = "<p>Impossible de charger les fiches.</p>";
+                console.error(error);
             }
         }
 
