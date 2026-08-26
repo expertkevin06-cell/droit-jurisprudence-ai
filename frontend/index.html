@@ -543,6 +543,26 @@
                     `;
                 });
 
+                if (Array.isArray(data.case_law) && data.case_law.length) {
+                    html += "<h4>Jurisprudence en lien</h4>";
+
+                    data.case_law.forEach(decision => {
+                        html += `
+                            <div class="card case_law">
+                                <p><strong>Juridiction :</strong> ${decision.court || "Non renseignée"}</p>
+                                <p><strong>Référence :</strong> ${decision.reference || "À compléter"}</p>
+                                <p><strong>Date :</strong> ${decision.decision_date || "Non renseignée"}</p>
+                                <p>${decision.summary}</p>
+                                <p>
+                                    <a href="${decision.url}" target="_blank" rel="noopener noreferrer">
+                                        Voir la source officielle
+                                    </a>
+                                </p>
+                            </div>
+                        `;
+                    });
+                }
+
                 html += `
                     <div class="warning">
                         Analyse fournie à titre d'information juridique.
