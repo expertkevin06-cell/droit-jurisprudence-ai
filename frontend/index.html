@@ -10,11 +10,22 @@
         body {
             margin: 0;
             font-family: Arial, Helvetica, sans-serif;
-            background: #111;
-            color: #eee;
+            background: #d8d8d8;
+            color: #1c1c1c;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background: url("themis.png") no-repeat center center;
+            background-size: min(92vw, 540px);
+            opacity: 0.14;
+            pointer-events: none;
         }
 
         .screen {
+            position: relative;
             min-height: 100vh;
             padding: 25px;
             box-sizing: border-box;
@@ -25,40 +36,40 @@
         }
 
         h1, h2, h3 {
-            color: #d4af37;
+            color: #7a5c00;
         }
 
         .box {
             max-width: 650px;
             margin: 30px auto;
-            background: #1a1a1a;
+            background: #f2f2f2;
             padding: 25px;
             border-radius: 12px;
-            border: 1px solid #333;
+            border: 1px solid #bbb;
         }
 
         label {
             display: block;
             margin-top: 15px;
             margin-bottom: 5px;
-            color: #ccc;
+            color: #333;
         }
 
         input, textarea, select {
             width: 100%;
             padding: 12px;
             border-radius: 8px;
-            border: 1px solid #444;
-            background: #222;
-            color: #eee;
+            border: 1px solid #999;
+            background: #fff;
+            color: #111;
             font-size: 16px;
             box-sizing: border-box;
         }
 
         input.greyed {
-            background: #181818;
-            color: #777;
-            border: 1px solid #333;
+            background: #ccc;
+            color: #555;
+            border: 1px solid #aaa;
             cursor: not-allowed;
         }
 
@@ -68,7 +79,7 @@
             padding: 14px;
             border: none;
             border-radius: 8px;
-            background: #d4af37;
+            background: #b8912a;
             color: #111;
             font-size: 17px;
             font-weight: bold;
@@ -76,18 +87,18 @@
         }
 
         button:active {
-            background: #b5952f;
+            background: #97741f;
         }
 
         .warning {
             margin-top: 15px;
             font-size: 13px;
-            color: #ffcc00;
+            color: #8a6d00;
         }
 
         .card {
-            background: #1a1a1a;
-            border: 1px solid #333;
+            background: #efefef;
+            border: 1px solid #bbb;
             border-radius: 10px;
             padding: 15px;
             margin: 12px 0;
@@ -102,17 +113,17 @@
         }
 
         .doctrine {
-            border-left: 5px solid #d4af37;
+            border-left: 5px solid #b8912a;
         }
 
         a {
-            color: #d4af37;
+            color: #7a5c00;
             text-decoration: none;
         }
 
         .small {
             font-size: 13px;
-            color: #aaa;
+            color: #555;
         }
 
         .tabs {
@@ -228,7 +239,7 @@
             <h3>Jurisprudence</h3>
 
             <label for="case-law-query">Recherche</label>
-            <input id="case-law-query" type="text" placeholder="Exemple : vice caché moteur">
+            <input id="case-law-query" type="text" placeholder="Exemple : injecteur grippé, fort kilométrage">
 
             <label for="case-law-theme">Thème</label>
             <select id="case-law-theme">
@@ -510,36 +521,70 @@
                     return;
                 }
 
-                let html = "<h4>Hypothèses juridiques</h4>";
+                let html = "<h4>Analyse technique détaillée</h4>";
 
-                data.hypotheses.forEach((h, index) => {
+                const partyLabels = {
+                    vendeur_professionnel: "Vendeur professionnel",
+                    vendeur_particulier: "Vendeur particulier",
+                    mandataire: "Mandataire",
+                    reparateur_professionnel: "Réparateur professionnel",
+                    centre_controle_technique: "Centre de contrôle technique",
+                    acheteur: "Acheteur",
+                    expert_automobile: "Expert automobile",
+                    cabinet_expertise: "Cabinet d'expertise",
+                    partie_a_determiner: "Partie à déterminer"
+                };
+
+                const groups = {};
+
+                data.hypotheses.forEach(h => {
+                    const key = h.party || "partie_a_determiner";
+
+                    if (!groups[key]) {
+                        groups[key] = [];
+                    }
+
+                    groups[key].push(h);
+                });
+
+                Object.keys(groups).forEach(party => {
+                    const label = partyLabels[party] || party;
+
                     html += `
                         <div class="card">
-                            <p><strong>${index + 1}. Partie :</strong> ${h.party}</p>
-                            <p><strong>Fondement :</strong> ${h.ground}</p>
-                            <p><strong>Plausibilité :</strong> ${h.plausibility}</p>
-                            <p><strong>Règle :</strong> ${h.rule_title}</p>
-                            <p>${h.explanation}</p>
-
-                            <p><strong>Base légale :</strong></p>
-                            <ul>
-                                ${h.legal_basis.map(basis => `
-                                    <li>${basis.code} : ${basis.articles.join(", ")}</li>
-                                `).join("")}
-                            </ul>
-
-                            <p><strong>Sources :</strong></p>
-                            <ul>
-                                ${h.sources.map(source => `
-                                    <li>
-                                        <a href="${source.url}" target="_blank" rel="noopener noreferrer">
-                                            ${source.name}
-                                        </a>
-                                    </li>
-                                `).join("")}
-                            </ul>
-                        </div>
+                            <h3>${label}</h3>
                     `;
+
+                    groups[party].forEach(h => {
+                        html += `
+                            <div class="card">
+                                <p><strong>Fondement :</strong> ${h.ground}</p>
+                                <p><strong>Plausibilité :</strong> ${h.plausibility}</p>
+                                <p><strong>Règle :</strong> ${h.rule_title}</p>
+                                <p>${h.explanation}</p>
+
+                                <p><strong>Base légale :</strong></p>
+                                <ul>
+                                    ${h.legal_basis.map(basis => `
+                                        <li>${basis.code} : ${basis.articles.join(", ")}</li>
+                                    `).join("")}
+                                </ul>
+
+                                <p><strong>Sources :</strong></p>
+                                <ul>
+                                    ${h.sources.map(source => `
+                                        <li>
+                                            <a href="${source.url}" target="_blank" rel="noopener noreferrer">
+                                                ${source.name}
+                                            </a>
+                                        </li>
+                                    `).join("")}
+                                </ul>
+                            </div>
+                        `;
+                    });
+
+                    html += "</div>";
                 });
 
                 if (Array.isArray(data.case_law) && data.case_law.length) {
