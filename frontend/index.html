@@ -524,13 +524,26 @@
 
                 if (data.status === "insufficient_data") {
                     result.innerHTML = `
-                        <p><strong>Données insuffisantes.</strong></p>
-                        <p>${data.message}</p>
+                        <div class="card official">
+                            <h3>Réponse adaptée</h3>
+                            <p>${data.synthesis || data.message}</p>
+                        </div>
                     `;
                     return;
                 }
 
-                let html = "<h4>Analyse technique détaillée</h4>";
+                let html = "";
+
+                if (data.synthesis) {
+                    html += `
+                        <div class="card official">
+                            <h3>Réponse adaptée</h3>
+                            <p>${data.synthesis}</p>
+                        </div>
+                    `;
+                }
+
+                html += "<h4>Analyse technique détaillée</h4>";
 
                 const partyLabels = {
                     vendeur_professionnel: "Vendeur professionnel",
@@ -618,7 +631,7 @@
 
                 html += `
                     <div class="warning">
-                        Analyse fournie à titre d'information juridique.
+                        Analyse fournie à titre d'appui ou d'aide juridique.
                         Elle ne remplace pas un avocat.
                     </div>
                 `;
@@ -702,7 +715,7 @@
 
                 html += `
                     <div class="warning">
-                        Analyse IA fournie à titre d'information juridique.
+                        Analyse IA fournie à titre d'appui ou d'aide juridique.
                         Elle ne remplace pas un avocat.
                     </div>
                 `;
