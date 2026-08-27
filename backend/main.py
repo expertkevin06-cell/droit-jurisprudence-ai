@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 import validator
 import db
 from auth import verify_admin, validate_token
-from rag import generate_ai_analysis, ai_extract_themes
+from rag import generate_ai_analysis, ai_extract_themes, call_llm
 
 load_dotenv()
 
@@ -469,6 +469,25 @@ def score_decision(decision: dict, tokens: list, themes: set, actor: str):
     return score
 
 
+ACTOR_LABELS = {
+    "vendeur_professionnel": "vendeur professionnel",
+    "vendeur_particulier": "vendeur particulier",
+    "mandataire": "mandataire",
+    "reparateur_professionnel": "réparateur professionnel",
+    "centre_controle_technique": "centre de contrôle technique",
+    "acheteur": "acheteur",
+    "expert_automobile": "expert automobile",
+    "cabinet_expertise": "cabinet d'expertise",
+    "partie_a_determiner": "partie à déterminer"
+}
+
+
+LEGAL_SUPPORT_MENTION = (
+    "Cette réponse est fournie à titre d'appui ou d'aide juridique uniquement ; "
+    "elle ne constitue pas une consultation juridique et ne remplace pas l'avis d'un avocat."
+)
+
+
 def get_primary_sources(rule: dict):
     result = []
 
@@ -582,6 +601,114 @@ def guardrail(hypotheses: list):
                 status_code=500,
                 detail="Hypothèse sans source officielle ou jurisprudentielle."
             )
+
+
+def build_synthesis(context: str, actor: str | None, hypotheses: list, case_law: list):
+    lines = [LEGAL_SUPPORT_MENTION]
+
+    if actor:
+        lines.append(
+            f"Pour l'acteur sélectionné ({ACTOR_LABELS.get(actor, actor)}), "
+            "l'analyse des textes et de la jurisprudence conduit aux pistes suivantes, "
+            "classées par pertinence :"
+        )
+    else:
+        lines.append(
+            "L'analyse des textes et de la jurisprudence conduit aux pistes suivantes, "
+            "classées par pertinence :"
+        )
+
+    for index, h in enumerate(hypotheses[:4], start=1):
+        party = ACTOR_LABELS.get(h.get("party", ""), h.get("party", ""))
+
+        lines.append(
+            f"{index}) {party} : {h.get('explanation', '')} "
+            f"(plausibilité : {h.get('plausibility', 'moyenne')} ; "
+            f"règle : {h.get('rule_title', '')})."
+        )
+
+    if case_law:
+        refs = []
+
+        for d in case_law[:3]:
+            refs.append(
+                f"{d.get('court') or 'Juridiction'}, "
+                f"{d.get('decision_date') or 'date à compléter'}, "
+                f"{d.get('reference') or 'référence à compléter'}"
+            )
+
+        lines.append("Jurisprudence en appui : " + " ; ".join(refs) + ".")
+
+    lines.append(
+        "La preuve du caractère caché et antérieur du défaut, le cas échéant par une "
+        "expertise contradictoire, reste déterminante pour établir la responsabilité "
+        "ou l'absence de responsabilité."
+    )
+
+    return " ".join(lines)
+
+
+def ai_synthesis(context: str, hypotheses: list, case_law: list):
+    provider = os.getenv("LLM_PROVIDER", "")
+
+    if not provider:
+        return None
+
+    prompt = (
+        "Contexte du litige :\n" + context + "\n\n"
+        "Hypothèses juridiques retenues :\n"
+        + json.dumps(
+            [
+                {
+                    "party": h.get("party"),
+                    "ground": h.get("ground"),
+                    "plausibility": h.get("plausibility"),
+                    "explanation": h.get("explanation")
+                }
+                for h in hypotheses[:5]
+            ],
+            ensure_ascii=False,
+            indent=2
+        )
+        + "\n\nJurisprudence en lien :\n"
+        + json.dumps(
+            [
+                {
+                    "court": d.get("court"),
+                    "date": d.get("decision_date"),
+                    "reference": d.get("reference"),
+                    "summary": d.get("summary")
+                }
+                for d in case_law[:4]
+            ],
+            ensure_ascii=False,
+            indent=2
+        )
+        + "\n\nRédige UNE SEULE réponse claire et adaptée en français, en un seul "
+        "paragraphe structuré, qui synthétise les responsabilités possibles et les "
+        "absences de responsabilité, en t'appuyant uniquement sur ces éléments. "
+        "Termine obligatoirement par la phrase exacte : "
+        f'"{LEGAL_SUPPORT_MENTION}"'
+    )
+
+    raw = call_llm(
+        "Tu es un assistant juridique français qui fournit un appui ou une aide "
+        "juridique, sans jamais remplacer un avocat.",
+        prompt
+    )
+
+    if not raw:
+        return None
+
+    text = raw.strip()
+
+    if not text:
+        return None
+
+    if "appui ou d'aide juridique" not in text:
+        text += " " + LEGAL_SUPPORT_MENTION
+
+    return text
 
 
 def get_case_law_from_db():
@@ -737,6 +864,7 @@ def analyze(payload: AnalyzeRequest, user=Depends(require_auth)):
     if not rules:
         return {
             "status": "insufficient_data",
+            "synthesis": LEGAL_SUPPORT_MENTION + " Données insuffisantes pour une analyse fiable.",
             "hypotheses": [],
             "case_law": [],
             "message": "Aucune règle juridique fiable ne correspond suffisamment au contexte fourni.",
@@ -752,8 +880,16 @@ def analyze(payload: AnalyzeRequest, user=Depends(require_auth)):
 
     case_law = retrieve_case_law(rules, payload.context, payload.actor)
 
+    synthesis = ai_synthesis(payload.context, hypotheses, case_law) or build_synthesis(
+        payload.context,
+        payload.actor,
+        hypotheses,
+        case_law
+    )
+
     return {
         "status": "ok",
+        "synthesis": synthesis,
         "hypotheses": hypotheses,
         "case_law": case_law,
         "warnings": [
