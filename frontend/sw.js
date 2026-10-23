@@ -1,8 +1,6 @@
-const CACHE = "justice-auto-robuste-v2";
+const CACHE = "justice-auto-robuste-v3";
 
-const STATIC_ASSETS = [
-    "./",
-    "./index.html",
+const PRECACHE = [
     "./manifest.json",
     "./icon-192.png",
     "./icon-512.png"
@@ -10,7 +8,11 @@ const STATIC_ASSETS = [
 
 self.addEventListener("install", event => {
     event.waitUntil(
-        caches.open(CACHE).then(cache => cache.addAll(STATIC_ASSETS))
+        caches.open(CACHE).then(cache => {
+            return Promise.allSettled(
+                PRECACHE.map(path => cache.add(path))
+            );
+        })
     );
 
     self.skipWaiting();
@@ -39,6 +41,22 @@ self.addEventListener("fetch", event => {
         return;
     }
 
+    if (event.request.mode === "navigate") {
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    const copy = response.clone();
+
+                    caches.open(CACHE).then(cache => cache.put("./index.html", copy));
+
+                    return response;
+                })
+                .catch(() => caches.match("./index.html"))
+        );
+
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request).then(cached => {
             if (cached) {
@@ -46,12 +64,14 @@ self.addEventListener("fetch", event => {
             }
 
             return fetch(event.request).then(response => {
-                const copy = response.clone();
+                if (response.ok && url.origin === location.origin) {
+                    const copy = response.clone();
 
-                caches.open(CACHE).then(cache => cache.put(event.request, copy));
+                    caches.open(CACHE).then(cache => cache.put(event.request, copy));
+                }
 
                 return response;
-            }).catch(() => caches.match("./index.html"));
+            });
         })
     );
 });
