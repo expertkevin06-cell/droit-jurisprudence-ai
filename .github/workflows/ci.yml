@@ -1,0 +1,99 @@
+name: Autocontrole
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Dépendances backend
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Compilation Python
+        run: |
+          cd backend
+          python -m py_compile main.py auth.py db.py validator.py rag.py set_admin.py
+
+      - name: Validation sources et base juridique
+        run: |
+          cd backend
+          python validator.py
+
+      - name: Autocontrole API
+        run: |
+          cd backend
+          uvicorn main:app --host 127.0.0.1 --port 8000 > server.log 2>&1 &
+          SERVER_PID=$!
+          sleep 8
+          curl -sf http://127.0.0.1:8000/api/health
+          curl -s -o /dev/null -w "%{http_code}" -X POST http://127.0.0.1:8000/api/login -H "Content-Type: application/json" -d '{"username":"x","password":"y"}' | grep -q 401
+          kill $SERVER_PID
+
+      - name: Autocontrole frontend
+        run: |
+          python - <<'PY'
+          import json, os, sys
+
+          front = "frontend"
+          errors = []
+
+          index = os.path.join(front, "index.html")
+          manifest = os.path.join(front, "manifest.json")
+          sw = os.path.join(front, "sw.js")
+
+          for path in [index, manifest, sw]:
+              if not os.path.exists(path):
+                  errors.append(f"manquant: {path}")
+
+          if os.path.exists(manifest):
+              with open(manifest, encoding="utf-8") as f:
+                  data = json.load(f)
+
+              for field in ["name", "short_name", "start_url", "display"]:
+                  if field not in data:
+                      errors.append(f"manifest: champ manquant {field}")
+
+              icons = data.get("icons", [])
+
+              if not icons:
+                  errors.append("manifest: aucune icône")
+
+              for icon in icons:
+                  src = icon.get("src", "")
+
+                  if not src.startswith("http"):
+                      if not os.path.exists(os.path.join(front, src)):
+                          errors.append(f"manifest: icône introuvable {src}")
+
+          if os.path.exists(index):
+              with open(index, encoding="utf-8") as f:
+                  html = f.read()
+
+              for needle in ["manifest.json", "analyzeCase", "searchCaseLaw", "loadLegalRules"]:
+                  if needle not in html:
+                      errors.append(f"index.html: élément manquant {needle}")
+
+          if errors:
+              print("ERREURS :")
+
+              for e in errors:
+                  print(" -", e)
+
+              sys.exit(1)
+
+          print("FRONTEND_OK")
+          PY
